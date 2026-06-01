@@ -27,16 +27,13 @@ export default function Home() {
   const [startDate, setStartDate] = useStartDate();
   const [spendings] = useSpendings();
   const [habit] = useStorage<HabitType>("resetMode_habit", null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !habit);
 
   const today = new Date().toISOString().split("T")[0];
   const isCleanToday = cleanDays.includes(today);
   const [, setCleanDays] = useStorage<string[]>("resetMode_cleanDays", []);
 
   useEffect(() => {
-    if (!habit) {
-      setShowOnboarding(true);
-    }
     if (!startDate && habit) {
       setStartDate(new Date().toISOString());
     }
