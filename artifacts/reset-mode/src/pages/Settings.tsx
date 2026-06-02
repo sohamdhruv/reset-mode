@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Bell, X, ShieldAlert, Zap } from "lucide-react";
+import { ArrowLeft, Bell, MessageSquare, X, ShieldAlert, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -356,6 +356,22 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground text-center py-2">All samples dismissed.</p>
             )}
           </div>
+        </div>
+
+        {/* ── Feedback ─────────────────────────────────────── */}
+        <div className="mb-8">
+          <a
+            href="https://forms.gle/hBdoq7LcA7TU1fBY8"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full rounded-xl border border-border bg-card py-3.5 px-4 text-sm font-semibold text-foreground active:opacity-70 transition-opacity"
+          >
+            <MessageSquare size={16} className="shrink-0" />
+            Give Feedback
+          </a>
+          <p className="mt-2 text-center text-xs text-muted-foreground leading-relaxed">
+            Share what helped, what felt confusing, or what you want added next.
+          </p>
         </div>
       </div>
     </div>
