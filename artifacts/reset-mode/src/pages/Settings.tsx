@@ -106,7 +106,13 @@ export default function Settings() {
               <Switch
                 data-testid="toggle-danger-zone"
                 checked={s.dangerZoneEnabled}
-                onCheckedChange={(v) => update("dangerZoneEnabled", v)}
+                onCheckedChange={async (v) => {
+                  if (v && notificationsSupported()) {
+                    const result = await requestNotificationPermission();
+                    setPermStatus(result);
+                  }
+                  update("dangerZoneEnabled", v);
+                }}
               />
             </div>
           </Card>
@@ -114,31 +120,26 @@ export default function Settings() {
           {s.dangerZoneEnabled && (
             <>
               {/* Push permission banner */}
-              {notificationsSupported() && permStatus !== "granted" && (
-                <div className="mb-3 p-3 bg-primary/10 border border-primary/30 rounded-xl flex items-start gap-3">
-                  <Bell size={16} className="text-primary shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground font-medium">
-                      {permStatus === "denied"
-                        ? "Notifications are blocked. Enable them in your browser settings to receive alerts even when the app is closed."
-                        : "Allow notifications to receive alerts even when the app is closed."}
-                    </p>
-                    {permStatus !== "denied" && (
-                      <button
-                        data-testid="button-request-permission"
-                        onClick={handleRequestPermission}
-                        className="mt-2 text-xs text-primary font-semibold hover:underline"
-                      >
-                        Allow notifications
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
               {permStatus === "granted" && (
                 <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-xl flex items-center gap-2">
                   <Bell size={14} className="text-primary" />
                   <span className="text-xs text-primary font-medium">Push notifications are active</span>
+                </div>
+              )}
+              {notificationsSupported() && permStatus === "denied" && (
+                <div className="mb-3 p-3 bg-card border border-border rounded-xl flex items-start gap-3">
+                  <Bell size={16} className="text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Push notifications are blocked in your browser. In-app reminders will still show while the app is open. To enable push, allow notifications in your browser settings.
+                  </p>
+                </div>
+              )}
+              {!notificationsSupported() && (
+                <div className="mb-3 p-3 bg-card border border-border rounded-xl flex items-start gap-3">
+                  <Bell size={16} className="text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Push notifications are not supported in this browser. In-app reminders will show while the app is open.
+                  </p>
                 </div>
               )}
 

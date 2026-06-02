@@ -49,10 +49,15 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
     setStep(2);
   }
 
-  function handleFinish() {
+  async function handleFinish() {
     if (!selectedPreset) {
       onComplete();
       return;
+    }
+
+    // Ask for browser notification permission before enabling the feature
+    if (typeof window !== "undefined" && "Notification" in window) {
+      await Notification.requestPermission();
     }
 
     const preset = DANGER_PRESETS.find((p) => p.value === selectedPreset);
@@ -60,6 +65,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
     const end = selectedPreset === "custom" ? customEnd : (preset?.end ?? "02:00");
 
     setSettings((prev) => ({
+      ...DEFAULT_SETTINGS,
       ...prev,
       dangerZoneEnabled: true,
       dangerZonePreset: selectedPreset,
