@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/BottomNav";
+import { InAppReminder } from "@/components/InAppReminder";
+import { useDangerZoneNotifications } from "@/hooks/useDangerZoneNotifications";
 import Home from "@/pages/Home";
 import Urge from "@/pages/Urge";
 import Tracker from "@/pages/Tracker";
@@ -15,27 +17,22 @@ import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
-const SETTINGS_ROUTES = ["/settings"];
-
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/urge" component={Urge} />
-      <Route path="/tracker" component={Tracker} />
-      <Route path="/spending" component={SpendingPage} />
-      <Route path="/journal" component={Journal} />
-      <Route path="/plan" component={Plan} />
-      <Route path="/settings" component={Settings} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 function AppShell() {
+  useDangerZoneNotifications();
+
   return (
     <div className="min-h-screen bg-background">
-      <Router />
+      <InAppReminder />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/urge" component={Urge} />
+        <Route path="/tracker" component={Tracker} />
+        <Route path="/spending" component={SpendingPage} />
+        <Route path="/journal" component={Journal} />
+        <Route path="/plan" component={Plan} />
+        <Route path="/settings" component={Settings} />
+        <Route component={NotFound} />
+      </Switch>
       <BottomNav />
     </div>
   );

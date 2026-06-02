@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 export type HabitType = "porn" | "dating_apps" | "social_media" | "all" | null;
+export type DangerZonePreset = "late_night" | "early_morning" | "afternoon" | "anytime" | "custom";
+export type DangerZoneIntensity = "light" | "normal" | "strong";
 
 export interface Spending {
   id: string;
@@ -28,9 +30,15 @@ export interface Settings {
   eveningEnabled: boolean;
   lateNightEnabled: boolean;
   riskyEnabled: boolean;
+  // Danger Zone
+  dangerZoneEnabled: boolean;
+  dangerZoneStart: string;
+  dangerZoneEnd: string;
+  dangerZoneIntensity: DangerZoneIntensity;
+  dangerZonePreset: DangerZonePreset;
 }
 
-const DEFAULT_SETTINGS: Settings = {
+export const DEFAULT_SETTINGS: Settings = {
   morningTime: "08:00",
   eveningTime: "20:00",
   lateNightTime: "22:30",
@@ -40,6 +48,11 @@ const DEFAULT_SETTINGS: Settings = {
   eveningEnabled: true,
   lateNightEnabled: true,
   riskyEnabled: true,
+  dangerZoneEnabled: false,
+  dangerZoneStart: "22:00",
+  dangerZoneEnd: "02:00",
+  dangerZoneIntensity: "normal",
+  dangerZonePreset: "late_night",
 };
 
 // Event target for cross-tab or cross-component reactivity
@@ -58,7 +71,6 @@ export function getStorage<T>(key: string, defaultValue: T): T {
 export function setStorage<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
   storageEventTarget.dispatchEvent(new Event(key));
-  // Also dispatch a general storage event
   window.dispatchEvent(new Event("storage"));
 }
 
@@ -69,10 +81,8 @@ export function useStorage<T>(key: string, defaultValue: T): [T, (val: T | ((pre
     const handleStorageChange = () => {
       setState(getStorage(key, defaultValue));
     };
-    
     storageEventTarget.addEventListener(key, handleStorageChange);
     window.addEventListener("storage", handleStorageChange);
-    
     return () => {
       storageEventTarget.removeEventListener(key, handleStorageChange);
       window.removeEventListener("storage", handleStorageChange);
@@ -93,14 +103,12 @@ export function useStorage<T>(key: string, defaultValue: T): [T, (val: T | ((pre
 // Derived helpers
 export function useStreakInfo() {
   const [cleanDays] = useStorage<string[]>("resetMode_cleanDays", []);
-  
-  // Naive streak computation: count consecutive days backwards from today or yesterday
+
   let currentStreak = 0;
   let bestStreak = 0;
-  
-  // Sort unique days descending
+
   const sortedDays = Array.from(new Set(cleanDays)).sort().reverse();
-  
+
   const today = new Date().toISOString().split("T")[0];
   const yesterdayDate = new Date();
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);
@@ -112,24 +120,22 @@ export function useStreakInfo() {
   for (let i = 0; i < sortedDays.length; i++) {
     const d = new Date(sortedDays[i]);
     const nextD = expectedNextDay ? new Date(expectedNextDay) : null;
-    
+
     if (nextD && d.getTime() === nextD.getTime()) {
       tempStreak++;
-      if (i === sortedDays.length - 1 || new Date(sortedDays[i+1]).getTime() !== d.getTime() - 86400000) {
-         if (tempStreak > bestStreak) bestStreak = tempStreak;
-         if (expectedNextDay === today || expectedNextDay === yesterday) {
-            // First run backwards
-            if (i === tempStreak - 1) {
-              currentStreak = tempStreak;
-            }
-         }
-         tempStreak = 0; // Reset for next historical streak
+      if (i === sortedDays.length - 1 || new Date(sortedDays[i + 1]).getTime() !== d.getTime() - 86400000) {
+        if (tempStreak > bestStreak) bestStreak = tempStreak;
+        if (expectedNextDay === today || expectedNextDay === yesterday) {
+          if (i === tempStreak - 1) {
+            currentStreak = tempStreak;
+          }
+        }
+        tempStreak = 0;
       }
     }
     expectedNextDay = new Date(d.getTime() - 86400000).toISOString().split("T")[0];
   }
 
-  // Handle single day best
   if (sortedDays.length > 0 && bestStreak === 0) bestStreak = 1;
   if (sortedDays.length > 0 && currentStreak === 0 && (sortedDays[0] === today || sortedDays[0] === yesterday)) {
     currentStreak = 1;
