@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, CheckCircle, Lock, PersonStanding, Droplets, Dumbbell, BookOpen } from "lucide-react";
+import { ArrowLeft, CheckCircle, Lock, PersonStanding, Droplets, Dumbbell, BookOpen, Target } from "lucide-react";
 import { useUrgesDefeated, useSettings, DEFAULT_SETTINGS } from "@/lib/storage";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 
@@ -21,6 +21,7 @@ const QUICK_ACTIONS = [
   { id: "water", label: "Drink water", Icon: Droplets },
   { id: "pushups", label: "Do 10 push-ups", Icon: Dumbbell },
   { id: "journal", label: "Write a journal note", Icon: BookOpen, nav: "/journal" },
+  { id: "goalwork", label: "Work on your goal for 5 minutes", Icon: Target },
 ];
 
 const PREP_SECS = 5;
@@ -31,7 +32,7 @@ const CYCLE_SECS = INHALE_SECS + HOLD_SECS + EXHALE_SECS; // 22
 const SESSION_SECS = 120;
 
 type BreathPhase = "inhale" | "hold" | "exhale";
-type AppPhase = "prep" | "breathing" | "result" | "actions" | "complete";
+type AppPhase = "prep" | "breathing" | "result" | "actions" | "goalwork" | "complete";
 
 function getBreathPhase(elapsed: number): BreathPhase {
   const pos = elapsed % CYCLE_SECS;
@@ -113,10 +114,21 @@ export default function Urge() {
   function endEarly() { setAppPhase("result"); }
   function handleUrgeResult() { setAppPhase("actions"); }
 
-  function handleAction(nav?: string) {
+  function handleAction(id: string, nav?: string) {
+    if (id === "goalwork") {
+      setSelectedAction(id);
+      setAppPhase("goalwork");
+      return;
+    }
     setUrgesDefeated(urgesDefeated + 1);
     if (nav) { setLocation(nav); }
     else { setAppPhase("complete"); setTimeout(() => setLocation("/"), 2000); }
+  }
+
+  function finishGoalWork() {
+    setUrgesDefeated(urgesDefeated + 1);
+    setAppPhase("complete");
+    setTimeout(() => setLocation("/"), 2000);
   }
 
   function handleSkipActions() {
@@ -345,7 +357,7 @@ export default function Urge() {
                 {QUICK_ACTIONS.map(({ id, label, Icon, nav }) => (
                   <button
                     key={id}
-                    onClick={() => { setSelectedAction(id); handleAction(nav); }}
+                    onClick={() => handleAction(id, nav)}
                     className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
                       selectedAction === id
                         ? "border-primary bg-primary/10"
@@ -363,6 +375,33 @@ export default function Urge() {
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-4"
               >
                 Skip — I am fine
+              </button>
+            </motion.div>
+          )}
+
+          {/* ── Goal work nudge ── */}
+          {appPhase === "goalwork" && (
+            <motion.div
+              key="goalwork"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 flex flex-col items-center justify-center text-center px-2"
+            >
+              <Target size={52} className="text-amber-400 mb-6" />
+              <h2 className="text-2xl font-black text-foreground mb-4 leading-snug">
+                Good choice.
+              </h2>
+              <p className="text-base text-muted-foreground leading-relaxed mb-10 max-w-[300px]">
+                {s.userGoal
+                  ? `Spend the next 5 minutes on: ${s.userGoal}. Small action beats the urge.`
+                  : "Spend the next 5 minutes on your goal. Small action beats the urge."}
+              </p>
+              <button
+                onClick={finishGoalWork}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+              >
+                Done
               </button>
             </motion.div>
           )}
