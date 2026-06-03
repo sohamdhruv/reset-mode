@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Bell, MessageSquare, X, ShieldAlert, Zap } from "lucide-react";
+import { ArrowLeft, Bell, MessageSquare, Target, X, ShieldAlert, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -319,6 +319,99 @@ export default function Settings() {
                 />
               )}
             </Card>
+          </div>
+        </div>
+
+        {/* ── Goal Reminders ───────────────────────────────── */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Target size={14} className="text-primary" />
+            <span className="text-xs uppercase tracking-widest text-primary font-semibold">Goal Reminders</span>
+          </div>
+
+          {s.userGoal ? (
+            <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-xl flex items-center gap-2">
+              <Target size={14} className="text-primary shrink-0" />
+              <span className="text-xs text-primary font-medium">Your goal: {s.userGoal}</span>
+            </div>
+          ) : (
+            <div className="mb-3 p-3 bg-card border border-border rounded-xl">
+              <p className="text-xs text-muted-foreground">
+                No goal set. Reset your onboarding in the Danger Zone section or add one below.
+              </p>
+              <Input
+                className="mt-2 bg-background border-border text-foreground text-sm"
+                placeholder="e.g. Launch my business"
+                maxLength={60}
+                defaultValue={s.userGoal}
+                onBlur={(e) => update("userGoal", e.target.value.trim())}
+              />
+            </div>
+          )}
+
+          {/* Morning goal reminder */}
+          <Card className="bg-card border border-border rounded-xl p-4 mb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="font-semibold text-foreground text-sm">Morning Goal Reminder</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Start the day connected to your why
+                </div>
+              </div>
+              <Switch
+                checked={s.morningGoalReminderEnabled}
+                onCheckedChange={async (v) => {
+                  if (v && notificationsSupported()) {
+                    const result = await requestNotificationPermission();
+                    setPermStatus(result);
+                  }
+                  update("morningGoalReminderEnabled", v);
+                }}
+              />
+            </div>
+            {s.morningGoalReminderEnabled && (
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Reminder time</Label>
+                <Input
+                  type="time"
+                  value={s.goalReminderTime}
+                  onChange={(e) => update("goalReminderTime", e.target.value)}
+                  className="bg-background border-border text-foreground max-w-[140px]"
+                />
+              </div>
+            )}
+          </Card>
+
+          {/* Danger zone goal reminder */}
+          <Card className="bg-card border border-border rounded-xl p-4 mb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-foreground text-sm">Danger Zone Goal Reminder</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Remind yourself of your goal during high-risk moments
+                </div>
+              </div>
+              <Switch
+                checked={s.dangerZoneGoalReminderEnabled}
+                onCheckedChange={async (v) => {
+                  if (v && notificationsSupported()) {
+                    const result = await requestNotificationPermission();
+                    setPermStatus(result);
+                  }
+                  update("dangerZoneGoalReminderEnabled", v);
+                }}
+              />
+            </div>
+          </Card>
+
+          {/* Reminder preview */}
+          <div className="p-3 bg-card border border-border rounded-xl">
+            <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-widest">Message preview</p>
+            <p className="text-sm text-foreground leading-relaxed">
+              {s.userGoal
+                ? `"Remember your goal: ${s.userGoal}. Protect it today."`
+                : `"Do not trade your future for a temporary urge."`}
+            </p>
           </div>
         </div>
 

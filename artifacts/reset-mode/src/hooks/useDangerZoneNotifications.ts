@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
-import { useStorage } from "@/lib/storage";
+import { useStorage, DEFAULT_SETTINGS } from "@/lib/storage";
 import type { Settings } from "@/lib/storage";
 import {
   isInDangerWindow,
   nextDangerMessage,
+  nextMorningGoalMessage,
   sendBrowserNotification,
   fireInAppReminder,
+  timeToMinutes,
 } from "@/lib/notifications";
 
 const INTENSITY_MS: Record<string, number> = {
@@ -14,59 +16,70 @@ const INTENSITY_MS: Record<string, number> = {
   strong: 10 * 60 * 1000,
 };
 
-const DEFAULT_SETTINGS: Settings = {
-  morningTime: "08:00",
-  eveningTime: "20:00",
-  lateNightTime: "22:30",
-  riskyStart: "21:00",
-  riskyEnd: "23:00",
-  morningEnabled: true,
-  eveningEnabled: true,
-  lateNightEnabled: true,
-  riskyEnabled: true,
-  dangerZoneEnabled: false,
-  dangerZoneStart: "22:00",
-  dangerZoneEnd: "02:00",
-  dangerZoneIntensity: "normal",
-  dangerZonePreset: "late_night",
-};
-
 export function useDangerZoneNotifications() {
   const [settings] = useStorage<Settings>("resetMode_settings", DEFAULT_SETTINGS);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const morningFiredRef = useRef<string | null>(null); // tracks which day the morning reminder fired
 
+  const s = { ...DEFAULT_SETTINGS, ...settings };
+
+  // ── Danger zone interval ────────────────────────────────────────────────────
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
 
-    if (!settings.dangerZoneEnabled) return;
+    if (!s.dangerZoneEnabled) return;
 
-    const intervalMs = INTENSITY_MS[settings.dangerZoneIntensity] ?? INTENSITY_MS.normal;
+    const intervalMs = INTENSITY_MS[s.dangerZoneIntensity] ?? INTENSITY_MS.normal;
+    const goal = s.dangerZoneGoalReminderEnabled && s.userGoal ? s.userGoal : undefined;
 
     function fire() {
-      if (!isInDangerWindow(settings.dangerZoneStart, settings.dangerZoneEnd)) return;
-      const message = nextDangerMessage();
+      if (!isInDangerWindow(s.dangerZoneStart, s.dangerZoneEnd)) return;
+      const message = nextDangerMessage(goal);
       const sent = sendBrowserNotification(message);
-      if (!sent) {
-        // App is open or push not granted — use in-app reminder instead
-        fireInAppReminder(message);
-      }
+      if (!sent) fireInAppReminder(message);
     }
 
-    // Check immediately on mount (in case app opens mid-window)
     fire();
-
     intervalRef.current = setInterval(fire, intervalMs);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [
-    settings.dangerZoneEnabled,
-    settings.dangerZoneStart,
-    settings.dangerZoneEnd,
-    settings.dangerZoneIntensity,
+    s.dangerZoneEnabled,
+    s.dangerZoneStart,
+    s.dangerZoneEnd,
+    s.dangerZoneIntensity,
+    s.dangerZoneGoalReminderEnabled,
+    s.userGoal,
   ]);
+
+  // ── Morning goal reminder — polls every minute, fires once per day ──────────
+  useEffect(() => {
+    if (!s.morningGoalReminderEnabled || !s.userGoal) return;
+
+    const checkMorning = () => {
+      const now = new Date();
+      const today = now.toISOString().split("T")[0];
+      if (morningFiredRef.current === today) return; // already fired today
+
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      const targetMins = timeToMinutes(s.goalReminderTime);
+
+      // Fire when we cross the target minute
+      if (currentMins >= targetMins && currentMins < targetMins + 2) {
+        morningFiredRef.current = today;
+        const message = nextMorningGoalMessage(s.userGoal);
+        const sent = sendBrowserNotification(message);
+        if (!sent) fireInAppReminder(message);
+      }
+    };
+
+    checkMorning(); // check immediately on mount
+    const id = setInterval(checkMorning, 60_000); // check every minute
+    return () => clearInterval(id);
+  }, [s.morningGoalReminderEnabled, s.userGoal, s.goalReminderTime]);
 }

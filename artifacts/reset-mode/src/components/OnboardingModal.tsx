@@ -2,15 +2,32 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStorage } from "@/lib/storage";
-import { DEFAULT_SETTINGS } from "@/lib/storage";
-import type { HabitType, DangerZonePreset, Settings } from "@/lib/storage";
+import { useStorage, DEFAULT_SETTINGS } from "@/lib/storage";
+import type { HabitType, DangerZonePreset, GoalDistraction, Settings } from "@/lib/storage";
 
 const HABITS: { value: NonNullable<HabitType>; label: string; desc: string }[] = [
   { value: "porn", label: "Pornography", desc: "Quit compulsive viewing habits" },
   { value: "dating_apps", label: "Dating Apps", desc: "Break the swipe loop" },
   { value: "social_media", label: "Social Media", desc: "Reclaim attention and time" },
   { value: "all", label: "All of the above", desc: "Full digital reset" },
+];
+
+const GOAL_OPTIONS = [
+  "Better focus",
+  "More confidence",
+  "Better relationship",
+  "Better discipline",
+  "More energy",
+  "Spiritual growth",
+  "Fitness",
+  "Career or business goal",
+  "Custom goal",
+];
+
+const DISTRACTION_OPTIONS: { value: NonNullable<GoalDistraction>; label: string; desc: string }[] = [
+  { value: "yes", label: "Yes", desc: "Every time I open the app" },
+  { value: "sometimes", label: "Sometimes", desc: "When I am stressed or bored" },
+  { value: "no", label: "No", desc: "It is just a bad habit" },
 ];
 
 interface DangerPreset {
@@ -29,13 +46,19 @@ const DANGER_PRESETS: DangerPreset[] = [
   { value: "custom", label: "Custom time", desc: "I will set it myself", start: "", end: "" },
 ];
 
+type Step = 1 | 2 | 3 | 4;
+const TOTAL_STEPS = 4;
+
 interface OnboardingModalProps {
   onComplete: () => void;
 }
 
 export function OnboardingModal({ onComplete }: OnboardingModalProps) {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<Step>(1);
   const [selectedHabit, setSelectedHabit] = useState<NonNullable<HabitType> | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  const [customGoal, setCustomGoal] = useState("");
+  const [selectedDistraction, setSelectedDistraction] = useState<NonNullable<GoalDistraction> | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<DangerZonePreset | null>(null);
   const [customStart, setCustomStart] = useState("22:00");
   const [customEnd, setCustomEnd] = useState("02:00");
@@ -49,36 +72,47 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
     setStep(2);
   }
 
+  function goToStep3() {
+    if (!selectedGoal) return;
+    setStep(3);
+  }
+
+  function goToStep4() {
+    setStep(4);
+  }
+
   async function handleFinish() {
-    if (!selectedPreset) {
-      onComplete();
-      return;
-    }
-
-    // Ask for browser notification permission before enabling the feature
-    if (typeof window !== "undefined" && "Notification" in window) {
-      await Notification.requestPermission();
-    }
-
+    const goalValue = selectedGoal === "Custom goal" ? customGoal.trim() : (selectedGoal ?? "");
     const preset = DANGER_PRESETS.find((p) => p.value === selectedPreset);
     const start = selectedPreset === "custom" ? customStart : (preset?.start ?? "22:00");
     const end = selectedPreset === "custom" ? customEnd : (preset?.end ?? "02:00");
+    const hasDangerZone = !!selectedPreset;
+
+    if (hasDangerZone && typeof window !== "undefined" && "Notification" in window) {
+      await Notification.requestPermission();
+    }
 
     setSettings((prev) => ({
       ...DEFAULT_SETTINGS,
       ...prev,
-      dangerZoneEnabled: true,
-      dangerZonePreset: selectedPreset,
-      dangerZoneStart: start,
-      dangerZoneEnd: end,
+      userGoal: goalValue,
+      goalDistraction: selectedDistraction ?? "",
+      ...(hasDangerZone && {
+        dangerZoneEnabled: true,
+        dangerZonePreset: selectedPreset!,
+        dangerZoneStart: start,
+        dangerZoneEnd: end,
+      }),
     }));
 
     onComplete();
   }
 
   function skipDangerZone() {
-    onComplete();
+    handleFinish();
   }
+
+  const effectiveGoal = selectedGoal === "Custom goal" ? customGoal.trim() : selectedGoal;
 
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center px-6 overflow-y-auto py-8">
@@ -86,14 +120,21 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 justify-center mb-8">
-          <div className={`h-1.5 w-10 rounded-full transition-colors ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
-          <div className={`h-1.5 w-10 rounded-full transition-colors ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 w-8 rounded-full transition-colors ${step >= i + 1 ? "bg-primary" : "bg-muted"}`}
+            />
+          ))}
         </div>
 
+        {/* ── Step 1: Habit ── */}
         {step === 1 && (
           <>
             <div className="mb-8 text-center">
-              <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-3">Step 1 of 2</div>
+              <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-3">
+                Step 1 of {TOTAL_STEPS}
+              </div>
               <h1 className="text-2xl font-black text-foreground leading-tight mb-3">
                 What habit do you want to break?
               </h1>
@@ -131,10 +172,123 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
           </>
         )}
 
+        {/* ── Step 2: Goal ── */}
         {step === 2 && (
           <>
             <div className="mb-8 text-center">
-              <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-3">Step 2 of 2</div>
+              <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-3">
+                Step 2 of {TOTAL_STEPS}
+              </div>
+              <h1 className="text-2xl font-black text-foreground leading-tight mb-3">
+                What goal is this habit distracting you from?
+              </h1>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Knowing your why makes your reset more powerful.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2.5 mb-5">
+              {GOAL_OPTIONS.map((goal) => (
+                <button
+                  key={goal}
+                  onClick={() => setSelectedGoal(goal)}
+                  className={`w-full text-left p-4 rounded-xl border transition-all ${
+                    selectedGoal === goal
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-border bg-card text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  <div className="font-semibold text-sm">{goal}</div>
+                </button>
+              ))}
+            </div>
+
+            {selectedGoal === "Custom goal" && (
+              <div className="mb-5 p-4 bg-card border border-border rounded-xl">
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Describe your goal</Label>
+                <Input
+                  value={customGoal}
+                  onChange={(e) => setCustomGoal(e.target.value)}
+                  placeholder="e.g. Launch my business"
+                  className="bg-background border-border text-foreground"
+                  maxLength={60}
+                />
+              </div>
+            )}
+
+            <Button
+              onClick={goToStep3}
+              disabled={!effectiveGoal}
+              className="w-full h-14 text-base font-bold rounded-xl mb-3"
+            >
+              Continue
+            </Button>
+            <button
+              onClick={() => { setSelectedGoal(null); setStep(1); }}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+            >
+              Back
+            </button>
+          </>
+        )}
+
+        {/* ── Step 3: Distraction ── */}
+        {step === 3 && (
+          <>
+            <div className="mb-8 text-center">
+              <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-3">
+                Step 3 of {TOTAL_STEPS}
+              </div>
+              <h1 className="text-2xl font-black text-foreground leading-tight mb-3">
+                Does this habit distract you from your goal?
+              </h1>
+              {effectiveGoal && (
+                <p className="text-sm text-primary font-medium">
+                  Your goal: {effectiveGoal}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 mb-8">
+              {DISTRACTION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSelectedDistraction(opt.value)}
+                  className={`w-full text-left p-4 rounded-xl border transition-all ${
+                    selectedDistraction === opt.value
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-border bg-card text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  <div className="font-semibold text-base">{opt.label}</div>
+                  <div className="text-sm text-muted-foreground mt-0.5">{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            <Button
+              onClick={goToStep4}
+              disabled={!selectedDistraction}
+              className="w-full h-14 text-base font-bold rounded-xl mb-3"
+            >
+              Continue
+            </Button>
+            <button
+              onClick={() => setStep(2)}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+            >
+              Back
+            </button>
+          </>
+        )}
+
+        {/* ── Step 4: Danger Zone ── */}
+        {step === 4 && (
+          <>
+            <div className="mb-8 text-center">
+              <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-3">
+                Step 4 of {TOTAL_STEPS}
+              </div>
               <h1 className="text-2xl font-black text-foreground leading-tight mb-3">
                 When do you struggle most?
               </h1>

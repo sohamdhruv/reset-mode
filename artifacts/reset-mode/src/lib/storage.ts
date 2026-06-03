@@ -20,6 +20,8 @@ export interface JournalEntry {
   didInstead: string;
 }
 
+export type GoalDistraction = "yes" | "sometimes" | "no" | "";
+
 export interface Settings {
   morningTime: string;
   eveningTime: string;
@@ -36,6 +38,12 @@ export interface Settings {
   dangerZoneEnd: string;
   dangerZoneIntensity: DangerZoneIntensity;
   dangerZonePreset: DangerZonePreset;
+  // Goal reminders
+  userGoal: string;
+  goalDistraction: GoalDistraction;
+  morningGoalReminderEnabled: boolean;
+  dangerZoneGoalReminderEnabled: boolean;
+  goalReminderTime: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -53,6 +61,11 @@ export const DEFAULT_SETTINGS: Settings = {
   dangerZoneEnd: "02:00",
   dangerZoneIntensity: "normal",
   dangerZonePreset: "late_night",
+  userGoal: "",
+  goalDistraction: "",
+  morningGoalReminderEnabled: false,
+  dangerZoneGoalReminderEnabled: false,
+  goalReminderTime: "08:00",
 };
 
 // Event target for cross-tab or cross-component reactivity

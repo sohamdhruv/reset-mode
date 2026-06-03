@@ -8,12 +8,38 @@ export const DANGER_MESSAGES = [
   "Do not negotiate with the urge. Change your environment.",
 ];
 
-let messageIndex = 0;
+export const GOAL_DANGER_MESSAGES = (goal: string) => [
+  `Remember your goal: ${goal}. Protect it today.`,
+  `Do not trade your future for a temporary urge.`,
+  `Your danger zone is starting. Stay close to your goal.`,
+  `Open Reset Mode for 2 minutes and protect ${goal}.`,
+  `Your future self is built by this choice.`,
+];
 
-export function nextDangerMessage(): string {
+export const GOAL_MORNING_MESSAGES = (goal: string) => [
+  `Good morning. Your goal today: ${goal}. Make it count.`,
+  `Start strong. Remember what you are building: ${goal}.`,
+  `Today is another step toward ${goal}. Stay on track.`,
+];
+
+let messageIndex = 0;
+let goalMessageIndex = 0;
+
+export function nextDangerMessage(goal?: string): string {
+  if (goal) {
+    const messages = GOAL_DANGER_MESSAGES(goal);
+    const msg = messages[goalMessageIndex % messages.length];
+    goalMessageIndex++;
+    return msg;
+  }
   const msg = DANGER_MESSAGES[messageIndex % DANGER_MESSAGES.length];
   messageIndex++;
   return msg;
+}
+
+export function nextMorningGoalMessage(goal: string): string {
+  const messages = GOAL_MORNING_MESSAGES(goal);
+  return messages[Math.floor(Math.random() * messages.length)];
 }
 
 // ─── Browser Notification API ────────────────────────────────────────────────

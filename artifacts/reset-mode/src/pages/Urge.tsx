@@ -1,180 +1,309 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Lock, PersonStanding, Droplets, Dumbbell, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUrgesDefeated } from "@/lib/storage";
-import { motion, AnimatePresence } from "framer-motion";
+import { useUrgesDefeated, useSettings, DEFAULT_SETTINGS } from "@/lib/storage";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 
-const MOODS = [
-  { id: "bored", label: "Bored", action: "Go for a 5-minute walk outside. Movement clears the loop." },
-  { id: "lonely", label: "Lonely", action: "Message a friend right now. Or journal for 2 minutes about what you need." },
-  { id: "stressed", label: "Stressed", action: "Breathe slowly and stretch your shoulders. The urge will pass in 2 minutes." },
-  { id: "tired", label: "Tired", action: "Put your phone face-down across the room and sleep. Your body needs rest, not stimulation." },
-  { id: "rejected", label: "Rejected", action: "Your value is not based on matches or responses. Write one thing you respect about yourself." },
-  { id: "anxious", label: "Anxious", action: "Slow your breath to 4 counts in, 4 counts out. Then write one sentence about what you are feeling." },
+const AFFIRMATIONS = [
+  "You are stronger than this moment.",
+  "This urge will pass. You will stay in control.",
+  "Breathe. Your goal is worth more.",
+  "Every breath is a vote for your future self.",
+  "You have beaten this before. Do it again.",
+  "Pause. Breathe. Redirect.",
+  "Your future self is watching this choice.",
+  "One calm breath can change the next decision.",
 ];
 
-const TIMER_SECONDS = 120;
+const QUICK_ACTIONS = [
+  { id: "lock", label: "Lock phone away", Icon: Lock },
+  { id: "walk", label: "Go for a walk", Icon: PersonStanding },
+  { id: "water", label: "Drink water", Icon: Droplets },
+  { id: "pushups", label: "Do 10 push-ups", Icon: Dumbbell },
+  { id: "journal", label: "Write a journal note", Icon: BookOpen, nav: "/journal" },
+];
+
+// Breathing cycle: inhale 4s, hold 2s, exhale 16s = 22s total
+const INHALE_SECS = 4;
+const HOLD_SECS = 2;
+const EXHALE_SECS = 16;
+const CYCLE_SECS = INHALE_SECS + HOLD_SECS + EXHALE_SECS; // 22
+const SESSION_SECS = 120;
+
+type BreathPhase = "inhale" | "hold" | "exhale";
+type AppPhase = "breathing" | "result" | "actions" | "complete";
+
+function getBreathPhase(elapsed: number): BreathPhase {
+  const pos = elapsed % CYCLE_SECS;
+  if (pos < INHALE_SECS) return "inhale";
+  if (pos < INHALE_SECS + HOLD_SECS) return "hold";
+  return "exhale";
+}
+
+function getPhaseLabel(phase: BreathPhase): string {
+  if (phase === "inhale") return "Inhale";
+  if (phase === "hold") return "Hold";
+  return "Exhale";
+}
 
 export default function Urge() {
   const [, setLocation] = useLocation();
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [timerActive, setTimerActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
-  const [defeated, setDefeated] = useState(false);
+  const [settings] = useSettings();
+  const s = { ...DEFAULT_SETTINGS, ...settings };
+
+  const [appPhase, setAppPhase] = useState<AppPhase>("breathing");
+  const [elapsed, setElapsed] = useState(0);
   const [urgesDefeated, setUrgesDefeated] = useUrgesDefeated();
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (timerActive && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((t) => t - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setTimerActive(false);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [timerActive, timeLeft]);
+  const controls = useAnimationControls();
+  const prevBreathPhase = useRef<BreathPhase | null>(null);
 
-  function selectMood(id: string) {
-    setSelectedMood(id);
-    setTimerActive(true);
-    setTimeLeft(TIMER_SECONDS);
-  }
-
-  function handleDefeat() {
-    setUrgesDefeated(urgesDefeated + 1);
-    setDefeated(true);
-    setTimeout(() => setLocation("/"), 1500);
-  }
-
-  const progress = (timeLeft / TIMER_SECONDS) * 100;
-  const circumference = 2 * Math.PI * 54;
-  const strokeDash = (progress / 100) * circumference;
-
-  const mood = MOODS.find((m) => m.id === selectedMood);
-
+  const breathPhase = getBreathPhase(elapsed);
+  const affirmationIndex = Math.floor(elapsed / 20) % AFFIRMATIONS.length;
+  const timeLeft = Math.max(0, SESSION_SECS - elapsed);
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
+  // Main session timer
+  useEffect(() => {
+    if (appPhase !== "breathing") return;
+    const id = setInterval(() => {
+      setElapsed((e) => {
+        const next = e + 1;
+        if (next >= SESSION_SECS) {
+          setAppPhase("result");
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [appPhase]);
+
+  // Animate the breathing circle whenever the phase changes
+  useEffect(() => {
+    if (prevBreathPhase.current === breathPhase) return;
+    prevBreathPhase.current = breathPhase;
+    if (breathPhase === "inhale") {
+      controls.start({ scale: 1 }, { duration: INHALE_SECS, ease: "easeInOut" });
+    } else if (breathPhase === "exhale") {
+      controls.start({ scale: 0.28 }, { duration: EXHALE_SECS, ease: "easeInOut" });
+    }
+    // "hold" — let it stay at current scale naturally
+  }, [breathPhase, controls]);
+
+  // Kick off the very first inhale
+  useEffect(() => {
+    controls.start({ scale: 1 }, { duration: INHALE_SECS, ease: "easeInOut" });
+    prevBreathPhase.current = "inhale";
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function endEarly() {
+    setAppPhase("result");
+  }
+
+  function handleUrgeResult() {
+    setAppPhase("actions");
+  }
+
+  function handleAction(nav?: string) {
+    setUrgesDefeated(urgesDefeated + 1);
+    if (nav) {
+      setLocation(nav);
+    } else {
+      setAppPhase("complete");
+      setTimeout(() => setLocation("/"), 2000);
+    }
+  }
+
+  function handleSkipActions() {
+    setUrgesDefeated(urgesDefeated + 1);
+    setAppPhase("complete");
+    setTimeout(() => setLocation("/"), 2000);
+  }
+
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-24">
+    <div className="min-h-screen bg-background flex flex-col pb-4">
       <div className="max-w-[430px] mx-auto w-full px-4 pt-8 flex-1 flex flex-col">
-        <button
-          data-testid="button-back"
-          onClick={() => setLocation("/")}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-8 text-sm"
-        >
-          <ArrowLeft size={16} />
-          Back
-        </button>
 
         <AnimatePresence mode="wait">
-          {defeated ? (
+
+          {/* ── Breathing session ── */}
+          {appPhase === "breathing" && (
             <motion.div
-              key="defeated"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex-1 flex flex-col items-center justify-center text-center"
-            >
-              <CheckCircle size={64} className="text-primary mb-4" />
-              <h2 className="text-2xl font-black text-foreground mb-2">Urge defeated.</h2>
-              <p className="text-muted-foreground">One vote for your future self.</p>
-            </motion.div>
-          ) : !selectedMood ? (
-            <motion.div
-              key="mood"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
+              key="breathing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="flex-1 flex flex-col"
             >
-              <div className="mb-8">
-                <h1 className="text-xl font-black text-foreground leading-tight mb-2">
-                  Pause. You only need to win the next 2 minutes.
-                </h1>
-                <p className="text-muted-foreground text-sm">What are you feeling right now?</p>
+              {/* Back */}
+              <button
+                onClick={() => setLocation("/")}
+                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-6 text-sm"
+              >
+                <ArrowLeft size={16} />
+                Back
+              </button>
+
+              {/* Affirmation */}
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={affirmationIndex}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.6 }}
+                  className="text-xl font-black text-foreground text-center leading-snug mb-10 px-2"
+                >
+                  {AFFIRMATIONS[affirmationIndex]}
+                </motion.p>
+              </AnimatePresence>
+
+              {/* Breathing circle */}
+              <div className="flex flex-col items-center flex-1 justify-center">
+                <div className="relative flex items-center justify-center w-64 h-64 mb-8">
+                  {/* Outer ring — soft pulse */}
+                  <div className="absolute inset-0 rounded-full border border-primary/10" />
+                  {/* Breathing dot */}
+                  <motion.div
+                    animate={controls}
+                    initial={{ scale: 0.28 }}
+                    className="w-48 h-48 rounded-full bg-primary/20 border-2 border-primary/50"
+                    style={{
+                      boxShadow: "0 0 60px hsl(var(--primary) / 0.25), 0 0 120px hsl(var(--primary) / 0.10)",
+                    }}
+                  />
+                  {/* Goal text in center */}
+                  {s.userGoal && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-[10px] text-primary/70 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
+                        {s.userGoal}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Phase label */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={breathPhase}
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.85 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-2xl font-black text-primary mb-2 tracking-wide"
+                  >
+                    {getPhaseLabel(breathPhase)}
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Timer */}
+                <div className="text-lg font-mono text-muted-foreground mb-8 tabular-nums">
+                  {minutes}:{seconds.toString().padStart(2, "0")}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {MOODS.map((mood) => (
+              {/* End early */}
+              <button
+                onClick={endEarly}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-3"
+              >
+                End session early
+              </button>
+            </motion.div>
+          )}
+
+          {/* ── Did the urge reduce? ── */}
+          {appPhase === "result" && (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 flex flex-col items-center justify-center"
+            >
+              <div className="text-center mb-10">
+                <div className="text-4xl mb-4">🧘</div>
+                <h2 className="text-2xl font-black text-foreground mb-2">Session complete.</h2>
+                <p className="text-muted-foreground text-sm">Did the urge reduce?</p>
+              </div>
+
+              <div className="flex flex-col gap-3 w-full max-w-[280px]">
+                {[
+                  { label: "Yes", emoji: "✅" },
+                  { label: "A little", emoji: "🤏" },
+                  { label: "No", emoji: "😤" },
+                ].map(({ label, emoji }) => (
                   <button
-                    key={mood.id}
-                    data-testid={`button-mood-${mood.id}`}
-                    onClick={() => selectMood(mood.id)}
-                    className="p-4 rounded-xl border border-border bg-card hover:border-primary/60 hover:bg-primary/5 transition-all text-left"
+                    key={label}
+                    onClick={handleUrgeResult}
+                    className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all text-foreground font-semibold"
                   >
-                    <div className="font-semibold text-foreground text-base">{mood.label}</div>
+                    <span className="text-lg">{emoji}</span>
+                    {label}
                   </button>
                 ))}
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {/* ── Quick actions ── */}
+          {appPhase === "actions" && (
             <motion.div
-              key="timer"
-              initial={{ opacity: 0, y: 12 }}
+              key="actions"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              className="flex-1 flex flex-col items-center"
+              exit={{ opacity: 0 }}
+              className="flex-1 flex flex-col"
             >
-              <div className="w-full mb-6 p-4 bg-card border border-border rounded-xl">
-                <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-2">Your Action</div>
-                <p className="text-foreground font-medium leading-relaxed text-sm">{mood?.action}</p>
+              <div className="text-center mb-8 pt-8">
+                <h2 className="text-xl font-black text-foreground mb-2">Good. Keep the momentum.</h2>
+                <p className="text-muted-foreground text-sm">Choose one action right now:</p>
               </div>
 
-              <div className="relative flex items-center justify-center my-6">
-                <svg width="128" height="128" className="-rotate-90">
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="54"
-                    fill="none"
-                    stroke="hsl(var(--border))"
-                    strokeWidth="6"
-                  />
-                  <motion.circle
-                    cx="64"
-                    cy="64"
-                    r="54"
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeDasharray={`${strokeDash} ${circumference}`}
-                    style={{ transition: "stroke-dasharray 1s linear" }}
-                  />
-                </svg>
-                <div className="absolute text-center">
-                  <div className="text-3xl font-black text-foreground tabular-nums">
-                    {minutes}:{seconds.toString().padStart(2, "0")}
-                  </div>
-                  <div className="text-xs text-muted-foreground">breathe</div>
-                </div>
+              <div className="flex flex-col gap-3 flex-1">
+                {QUICK_ACTIONS.map(({ id, label, Icon, nav }) => (
+                  <button
+                    key={id}
+                    onClick={() => { setSelectedAction(id); handleAction(nav); }}
+                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                      selectedAction === id
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-card hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <Icon size={20} className="text-primary shrink-0" />
+                    <span className="font-semibold text-foreground text-sm">{label}</span>
+                  </button>
+                ))}
               </div>
-
-              <p className="text-center text-sm text-muted-foreground mb-8 px-4">
-                Stay with this for {minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`} more. The urge will pass.
-              </p>
-
-              <Button
-                data-testid="button-defeat-urge"
-                onClick={handleDefeat}
-                className="w-full h-14 text-base font-bold rounded-xl bg-primary text-primary-foreground"
-              >
-                <CheckCircle size={20} className="mr-2" />
-                I defeated this urge
-              </Button>
 
               <button
-                onClick={() => { setSelectedMood(null); setTimerActive(false); setTimeLeft(TIMER_SECONDS); }}
-                className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                onClick={handleSkipActions}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-4"
               >
-                Change mood
+                Skip — I am fine
               </button>
             </motion.div>
           )}
+
+          {/* ── Complete ── */}
+          {appPhase === "complete" && (
+            <motion.div
+              key="complete"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex-1 flex flex-col items-center justify-center text-center"
+            >
+              <CheckCircle size={72} className="text-primary mb-5" />
+              <h2 className="text-2xl font-black text-foreground mb-2">Urge defeated.</h2>
+              <p className="text-muted-foreground">One vote for your future self.</p>
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </div>
     </div>
