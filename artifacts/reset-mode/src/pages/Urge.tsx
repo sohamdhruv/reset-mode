@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, CheckCircle, Lock, PersonStanding, Droplets, Dumbbell, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useUrgesDefeated, useSettings, DEFAULT_SETTINGS } from "@/lib/storage";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 
@@ -24,7 +23,7 @@ const QUICK_ACTIONS = [
   { id: "journal", label: "Write a journal note", Icon: BookOpen, nav: "/journal" },
 ];
 
-// Breathing cycle: inhale 4s, hold 2s, exhale 16s = 22s total
+const PREP_SECS = 5;
 const INHALE_SECS = 4;
 const HOLD_SECS = 2;
 const EXHALE_SECS = 16;
@@ -32,7 +31,7 @@ const CYCLE_SECS = INHALE_SECS + HOLD_SECS + EXHALE_SECS; // 22
 const SESSION_SECS = 120;
 
 type BreathPhase = "inhale" | "hold" | "exhale";
-type AppPhase = "breathing" | "result" | "actions" | "complete";
+type AppPhase = "prep" | "breathing" | "result" | "actions" | "complete";
 
 function getBreathPhase(elapsed: number): BreathPhase {
   const pos = elapsed % CYCLE_SECS;
@@ -52,7 +51,8 @@ export default function Urge() {
   const [settings] = useSettings();
   const s = { ...DEFAULT_SETTINGS, ...settings };
 
-  const [appPhase, setAppPhase] = useState<AppPhase>("breathing");
+  const [appPhase, setAppPhase] = useState<AppPhase>("prep");
+  const [countdown, setCountdown] = useState(PREP_SECS);
   const [elapsed, setElapsed] = useState(0);
   const [urgesDefeated, setUrgesDefeated] = useUrgesDefeated();
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
@@ -66,22 +66,31 @@ export default function Urge() {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  // Main session timer
+  // ── Prep countdown ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (appPhase !== "prep") return;
+    if (countdown <= 0) {
+      setAppPhase("breathing");
+      return;
+    }
+    const id = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [appPhase, countdown]);
+
+  // ── Session timer — starts only when breathing begins ───────────────────────
   useEffect(() => {
     if (appPhase !== "breathing") return;
     const id = setInterval(() => {
       setElapsed((e) => {
         const next = e + 1;
-        if (next >= SESSION_SECS) {
-          setAppPhase("result");
-        }
+        if (next >= SESSION_SECS) setAppPhase("result");
         return next;
       });
     }, 1000);
     return () => clearInterval(id);
   }, [appPhase]);
 
-  // Animate the breathing circle whenever the phase changes
+  // ── Circle animation — responds to breath phase changes ────────────────────
   useEffect(() => {
     if (prevBreathPhase.current === breathPhase) return;
     prevBreathPhase.current = breathPhase;
@@ -90,32 +99,24 @@ export default function Urge() {
     } else if (breathPhase === "exhale") {
       controls.start({ scale: 0.28 }, { duration: EXHALE_SECS, ease: "easeInOut" });
     }
-    // "hold" — let it stay at current scale naturally
+    // "hold" — stays at current scale naturally
   }, [breathPhase, controls]);
 
-  // Kick off the very first inhale
+  // ── First inhale fires when the breathing phase begins ─────────────────────
   useEffect(() => {
+    if (appPhase !== "breathing") return;
     controls.start({ scale: 1 }, { duration: INHALE_SECS, ease: "easeInOut" });
     prevBreathPhase.current = "inhale";
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appPhase]);
 
-  function endEarly() {
-    setAppPhase("result");
-  }
-
-  function handleUrgeResult() {
-    setAppPhase("actions");
-  }
+  function endEarly() { setAppPhase("result"); }
+  function handleUrgeResult() { setAppPhase("actions"); }
 
   function handleAction(nav?: string) {
     setUrgesDefeated(urgesDefeated + 1);
-    if (nav) {
-      setLocation(nav);
-    } else {
-      setAppPhase("complete");
-      setTimeout(() => setLocation("/"), 2000);
-    }
+    if (nav) { setLocation(nav); }
+    else { setAppPhase("complete"); setTimeout(() => setLocation("/"), 2000); }
   }
 
   function handleSkipActions() {
@@ -130,6 +131,82 @@ export default function Urge() {
 
         <AnimatePresence mode="wait">
 
+          {/* ── Prep phase ── */}
+          {appPhase === "prep" && (
+            <motion.div
+              key="prep"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.5 }}
+              className="flex-1 flex flex-col"
+            >
+              {/* Back */}
+              <button
+                onClick={() => setLocation("/")}
+                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-6 text-sm"
+              >
+                <ArrowLeft size={16} />
+                Back
+              </button>
+
+              <div className="flex-1 flex flex-col items-center justify-center">
+                {/* Static dot — give them something to find */}
+                <div className="relative flex items-center justify-center w-64 h-64 mb-10">
+                  <div className="absolute inset-0 rounded-full border border-primary/10" />
+                  <motion.div
+                    animate={controls}
+                    initial={{ scale: 0.28 }}
+                    className="w-48 h-48 rounded-full bg-primary/20 border-2 border-primary/50"
+                    style={{
+                      boxShadow: "0 0 60px hsl(var(--primary) / 0.25), 0 0 120px hsl(var(--primary) / 0.10)",
+                    }}
+                  />
+                  {s.userGoal && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-[10px] text-primary/70 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
+                        {s.userGoal}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Preparation message */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="text-center mb-8 px-4"
+                >
+                  <p className="text-lg text-foreground font-semibold leading-relaxed mb-1">
+                    Find the dot.
+                  </p>
+                  <p className="text-base text-muted-foreground leading-relaxed mb-1">
+                    Keep your eyes gently on it.
+                  </p>
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    Breathe only when the guide begins.
+                  </p>
+                </motion.div>
+
+                {/* Countdown */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={countdown}
+                    initial={{ opacity: 0, scale: 0.75 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.2 }}
+                    transition={{ duration: 0.35 }}
+                    className="text-center"
+                  >
+                    <p className="text-muted-foreground text-sm mb-1">Starting in</p>
+                    <p className="text-5xl font-black text-primary tabular-nums">{countdown}</p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+
           {/* ── Breathing session ── */}
           {appPhase === "breathing" && (
             <motion.div
@@ -137,6 +214,7 @@ export default function Urge() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
               className="flex-1 flex flex-col"
             >
               {/* Back */}
@@ -165,9 +243,7 @@ export default function Urge() {
               {/* Breathing circle */}
               <div className="flex flex-col items-center flex-1 justify-center">
                 <div className="relative flex items-center justify-center w-64 h-64 mb-8">
-                  {/* Outer ring — soft pulse */}
                   <div className="absolute inset-0 rounded-full border border-primary/10" />
-                  {/* Breathing dot */}
                   <motion.div
                     animate={controls}
                     initial={{ scale: 0.28 }}
@@ -176,7 +252,6 @@ export default function Urge() {
                       boxShadow: "0 0 60px hsl(var(--primary) / 0.25), 0 0 120px hsl(var(--primary) / 0.10)",
                     }}
                   />
-                  {/* Goal text in center */}
                   {s.userGoal && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <p className="text-[10px] text-primary/70 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
