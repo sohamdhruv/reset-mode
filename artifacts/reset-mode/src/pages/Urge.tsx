@@ -153,18 +153,19 @@ export default function Urge() {
               <div className="flex-1 flex flex-col items-center justify-center">
                 {/* Static dot — give them something to find */}
                 <div className="relative flex items-center justify-center w-64 h-64 mb-10">
-                  <div className="absolute inset-0 rounded-full border border-primary/10" />
+                  <div className="absolute inset-0 rounded-full border border-yellow-500/15" />
                   <motion.div
                     animate={controls}
                     initial={{ scale: 0.28 }}
-                    className="w-48 h-48 rounded-full bg-primary/20 border-2 border-primary/50"
+                    className="w-48 h-48 rounded-full"
                     style={{
-                      boxShadow: "0 0 60px hsl(var(--primary) / 0.25), 0 0 120px hsl(var(--primary) / 0.10)",
+                      background: "radial-gradient(circle at 38% 36%, #fde68a 0%, #f59e0b 55%, #b45309 100%)",
+                      boxShadow: "0 0 48px 8px rgba(251,191,36,0.28), 0 0 100px 20px rgba(245,158,11,0.13)",
                     }}
                   />
                   {s.userGoal && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-[10px] text-primary/70 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
+                      <p className="text-[10px] text-amber-900/80 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
                         {s.userGoal}
                       </p>
                     </div>
@@ -243,18 +244,19 @@ export default function Urge() {
               {/* Breathing circle */}
               <div className="flex flex-col items-center flex-1 justify-center">
                 <div className="relative flex items-center justify-center w-64 h-64 mb-8">
-                  <div className="absolute inset-0 rounded-full border border-primary/10" />
+                  <div className="absolute inset-0 rounded-full border border-yellow-500/15" />
                   <motion.div
                     animate={controls}
                     initial={{ scale: 0.28 }}
-                    className="w-48 h-48 rounded-full bg-primary/20 border-2 border-primary/50"
+                    className="w-48 h-48 rounded-full"
                     style={{
-                      boxShadow: "0 0 60px hsl(var(--primary) / 0.25), 0 0 120px hsl(var(--primary) / 0.10)",
+                      background: "radial-gradient(circle at 38% 36%, #fde68a 0%, #f59e0b 55%, #b45309 100%)",
+                      boxShadow: "0 0 48px 8px rgba(251,191,36,0.28), 0 0 100px 20px rgba(245,158,11,0.13)",
                     }}
                   />
                   {s.userGoal && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-[10px] text-primary/70 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
+                      <p className="text-[10px] text-amber-900/80 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
                         {s.userGoal}
                       </p>
                     </div>
@@ -269,7 +271,7 @@ export default function Urge() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.85 }}
                     transition={{ duration: 0.3 }}
-                    className="text-2xl font-black text-primary mb-2 tracking-wide"
+                    className="text-2xl font-black text-amber-400 mb-2 tracking-wide"
                   >
                     {getPhaseLabel(breathPhase)}
                   </motion.div>
