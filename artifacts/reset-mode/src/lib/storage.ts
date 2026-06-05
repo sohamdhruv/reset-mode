@@ -19,9 +19,9 @@ export const HABIT_LABELS: Record<NonNullable<HabitType>, string> = {
   scrolling: "Endless scrolling",
   spending: "Spending on apps",
   other: "Other unwanted habit",
+  all: "Full digital reset",
   // legacy values mapped to the closest current label
   social_media: "Endless scrolling",
-  all: "Other unwanted habit",
 };
 
 export function habitLabel(habit: HabitType): string {

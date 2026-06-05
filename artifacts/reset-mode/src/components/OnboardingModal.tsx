@@ -9,20 +9,20 @@ const HABITS: { value: NonNullable<HabitType>; label: string; desc: string }[] =
   { value: "porn", label: "Pornography", desc: "Quit compulsive viewing habits" },
   { value: "dating_apps", label: "Dating apps", desc: "Break the swipe loop" },
   { value: "scrolling", label: "Endless scrolling", desc: "Reclaim attention and time" },
-  { value: "spending", label: "Spending on apps", desc: "Stop impulse purchases and boosts" },
-  { value: "other", label: "Other unwanted habit", desc: "Reset any compulsive loop" },
+  { value: "spending", label: "Spending on apps", desc: "Stop wasting money on coins, boosts, or paid features" },
+  { value: "other", label: "Other unwanted habit", desc: "Reset any habit pulling you away from your goals" },
+  { value: "all", label: "Full digital reset", desc: "Reset multiple digital habits at once" },
 ];
 
 const GOAL_OPTIONS = [
   "Better focus",
   "More confidence",
-  "Better sleep",
+  "Better relationship",
   "Better discipline",
   "More energy",
+  "Spiritual growth",
   "Fitness",
   "Career or business goal",
-  "Better relationships",
-  "Spiritual growth",
   "Custom goal",
 ];
 
@@ -117,8 +117,14 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const effectiveGoal = selectedGoal === "Custom goal" ? customGoal.trim() : selectedGoal;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center px-6 overflow-y-auto py-8">
-      <div className="max-w-[380px] w-full">
+    <div
+      className="fixed inset-0 z-[100] bg-background flex flex-col overflow-y-auto px-6"
+      style={{
+        paddingTop: "max(2rem, env(safe-area-inset-top))",
+        paddingBottom: "max(2rem, env(safe-area-inset-bottom))",
+      }}
+    >
+      <div className="max-w-[380px] w-full mx-auto my-auto">
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 justify-center mb-8">
