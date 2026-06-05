@@ -6,7 +6,7 @@ import { useStorage, DEFAULT_SETTINGS } from "@/lib/storage";
 import type { HabitType, DangerZonePreset, GoalDistraction, Settings } from "@/lib/storage";
 
 const HABITS: { value: NonNullable<HabitType>; label: string; desc: string }[] = [
-  { value: "porn", label: "Porn", desc: "Quit compulsive viewing habits" },
+  { value: "porn", label: "Pornography", desc: "Quit compulsive viewing habits" },
   { value: "dating_apps", label: "Dating apps", desc: "Break the swipe loop" },
   { value: "scrolling", label: "Endless scrolling", desc: "Reclaim attention and time" },
   { value: "spending", label: "Spending on apps", desc: "Stop impulse purchases and boosts" },
@@ -138,7 +138,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 Step 1 of {TOTAL_STEPS}
               </div>
               <h1 className="text-2xl font-black text-foreground leading-tight mb-3">
-                What habit do you want to break?
+                What habit are you trying to reset?
               </h1>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Choose honestly. No one is watching. This is your private space.

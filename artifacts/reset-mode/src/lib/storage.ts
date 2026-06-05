@@ -14,7 +14,7 @@ export type DangerZoneIntensity = "light" | "normal" | "strong";
 export type DotColor = "gold" | "green" | "silver";
 
 export const HABIT_LABELS: Record<NonNullable<HabitType>, string> = {
-  porn: "Porn",
+  porn: "Pornography",
   dating_apps: "Dating apps",
   scrolling: "Endless scrolling",
   spending: "Spending on apps",
