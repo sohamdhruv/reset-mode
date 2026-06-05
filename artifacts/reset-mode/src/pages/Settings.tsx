@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Bell, MessageSquare, Target, X, ShieldAlert, Zap } from "lucide-react";
+import { ArrowLeft, Bell, MessageSquare, Target, X, ShieldAlert, Zap, Palette, Info } from "lucide-react";
 import { useLocation } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/lib/storage";
 import { DEFAULT_SETTINGS } from "@/lib/storage";
-import type { DangerZonePreset, DangerZoneIntensity } from "@/lib/storage";
+import type { DangerZonePreset, DangerZoneIntensity, DotColor } from "@/lib/storage";
 import {
   notificationsSupported,
   requestNotificationPermission,
@@ -36,6 +36,12 @@ const INTENSITY_OPTIONS: { value: DangerZoneIntensity; label: string; desc: stri
   { value: "light", label: "Light", desc: "Every 30 minutes" },
   { value: "normal", label: "Normal", desc: "Every 15 minutes" },
   { value: "strong", label: "Strong", desc: "Every 10 minutes" },
+];
+
+const DOT_COLOR_OPTIONS: { value: DotColor; label: string; swatch: string }[] = [
+  { value: "gold", label: "Gold / Yellow", swatch: "radial-gradient(circle at 38% 36%, #fde68a 0%, #f59e0b 60%, #b45309 100%)" },
+  { value: "green", label: "Green", swatch: "radial-gradient(circle at 38% 36%, #bbf7d0 0%, #22c55e 60%, #15803d 100%)" },
+  { value: "silver", label: "Silver / White", swatch: "radial-gradient(circle at 38% 36%, #f8fafc 0%, #cbd5e1 60%, #64748b 100%)" },
 ];
 
 export default function Settings() {
@@ -448,6 +454,50 @@ export default function Settings() {
             {dismissed.length === SAMPLE_NOTIFICATIONS.length && (
               <p className="text-sm text-muted-foreground text-center py-2">All samples dismissed.</p>
             )}
+          </div>
+        </div>
+
+        {/* ── Breathing Dot Color ──────────────────────────── */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Palette size={14} className="text-primary" />
+            <span className="text-xs uppercase tracking-widest text-primary font-semibold">Breathing Dot Color</span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Choose the color of the meditation dot and its glow during breathing sessions.
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {DOT_COLOR_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                data-testid={`button-dot-color-${opt.value}`}
+                onClick={() => update("dotColor", opt.value)}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border text-center transition-all ${
+                  s.dotColor === opt.value
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                }`}
+              >
+                <span
+                  className="w-9 h-9 rounded-full"
+                  style={{ background: opt.swatch, boxShadow: "0 0 14px 2px rgba(255,255,255,0.08)" }}
+                />
+                <span className="text-xs font-medium leading-tight">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Disclaimer ───────────────────────────────────── */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Info size={14} className="text-muted-foreground" />
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Disclaimer</span>
+          </div>
+          <div className="p-4 bg-card border border-border rounded-xl">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Reset Mode is a self-help tool for building discipline and reducing unwanted digital habits. It is not medical advice or a replacement for professional support.
+            </p>
           </div>
         </div>
 

@@ -2,7 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, CheckCircle, Lock, PersonStanding, Droplets, Dumbbell, BookOpen, Target } from "lucide-react";
 import { useUrgesDefeated, useSettings, DEFAULT_SETTINGS } from "@/lib/storage";
+import type { DotColor } from "@/lib/storage";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
+
+const FUTURE_SELF = [
+  "Picture the disciplined version of you.",
+  "Your future self thanks you for this choice.",
+  "Protect your sleep, money, confidence, and purpose.",
+  "This breath is building the person you want to become.",
+  "Choose your future over the urge.",
+  "Your future self is calm, focused, and in control.",
+  "Stay with the breath. Become that person now.",
+];
 
 const AFFIRMATIONS = [
   "You are stronger than this moment.",
@@ -11,9 +22,49 @@ const AFFIRMATIONS = [
   "Every breath is a vote for your future self.",
   "You have beaten this before. Do it again.",
   "Pause. Breathe. Redirect.",
-  "Your future self is watching this choice.",
-  "One calm breath can change the next decision.",
 ];
+
+// Interleave future-self visualizations with positive affirmations so both
+// types rotate together during the session.
+const ROTATING_MESSAGES: string[] = (() => {
+  const out: string[] = [];
+  const max = Math.max(FUTURE_SELF.length, AFFIRMATIONS.length);
+  for (let i = 0; i < max; i++) {
+    if (i < FUTURE_SELF.length) out.push(FUTURE_SELF[i]);
+    if (i < AFFIRMATIONS.length) out.push(AFFIRMATIONS[i]);
+  }
+  return out;
+})();
+
+const DOT_STYLES: Record<DotColor, {
+  gradient: string;
+  shadow: string;
+  ring: string;
+  label: string;
+  goalText: string;
+}> = {
+  gold: {
+    gradient: "radial-gradient(circle at 38% 36%, #fde68a 0%, #f59e0b 55%, #b45309 100%)",
+    shadow: "0 0 48px 8px rgba(251,191,36,0.28), 0 0 100px 20px rgba(245,158,11,0.13)",
+    ring: "border-yellow-500/15",
+    label: "text-amber-400",
+    goalText: "text-amber-900/80",
+  },
+  green: {
+    gradient: "radial-gradient(circle at 38% 36%, #bbf7d0 0%, #22c55e 55%, #15803d 100%)",
+    shadow: "0 0 48px 8px rgba(34,197,94,0.28), 0 0 100px 20px rgba(22,163,74,0.13)",
+    ring: "border-green-500/15",
+    label: "text-green-400",
+    goalText: "text-green-950/80",
+  },
+  silver: {
+    gradient: "radial-gradient(circle at 38% 36%, #f8fafc 0%, #cbd5e1 55%, #64748b 100%)",
+    shadow: "0 0 48px 8px rgba(226,232,240,0.30), 0 0 100px 20px rgba(148,163,184,0.15)",
+    ring: "border-slate-300/20",
+    label: "text-slate-200",
+    goalText: "text-slate-800/80",
+  },
+};
 
 const QUICK_ACTIONS = [
   { id: "lock", label: "Lock phone away", Icon: Lock },
@@ -61,8 +112,9 @@ export default function Urge() {
   const controls = useAnimationControls();
   const prevBreathPhase = useRef<BreathPhase | null>(null);
 
+  const dot = DOT_STYLES[s.dotColor] ?? DOT_STYLES.gold;
   const breathPhase = getBreathPhase(elapsed);
-  const affirmationIndex = Math.floor(elapsed / 20) % AFFIRMATIONS.length;
+  const messageIndex = Math.floor(elapsed / 12) % ROTATING_MESSAGES.length;
   const timeLeft = Math.max(0, SESSION_SECS - elapsed);
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -165,19 +217,16 @@ export default function Urge() {
               <div className="flex-1 flex flex-col items-center justify-center">
                 {/* Static dot — give them something to find */}
                 <div className="relative flex items-center justify-center w-64 h-64 mb-10">
-                  <div className="absolute inset-0 rounded-full border border-yellow-500/15" />
+                  <div className={`absolute inset-0 rounded-full border ${dot.ring}`} />
                   <motion.div
                     animate={controls}
                     initial={{ scale: 0.28 }}
                     className="w-48 h-48 rounded-full"
-                    style={{
-                      background: "radial-gradient(circle at 38% 36%, #fde68a 0%, #f59e0b 55%, #b45309 100%)",
-                      boxShadow: "0 0 48px 8px rgba(251,191,36,0.28), 0 0 100px 20px rgba(245,158,11,0.13)",
-                    }}
+                    style={{ background: dot.gradient, boxShadow: dot.shadow }}
                   />
                   {s.userGoal && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-[10px] text-amber-900/80 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
+                      <p className={`text-[10px] ${dot.goalText} font-semibold text-center px-6 leading-tight uppercase tracking-wider`}>
                         {s.userGoal}
                       </p>
                     </div>
@@ -242,33 +291,30 @@ export default function Urge() {
               {/* Affirmation */}
               <AnimatePresence mode="wait">
                 <motion.p
-                  key={affirmationIndex}
+                  key={messageIndex}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.6 }}
                   className="text-xl font-black text-foreground text-center leading-snug mb-10 px-2"
                 >
-                  {AFFIRMATIONS[affirmationIndex]}
+                  {ROTATING_MESSAGES[messageIndex]}
                 </motion.p>
               </AnimatePresence>
 
               {/* Breathing circle */}
               <div className="flex flex-col items-center flex-1 justify-center">
                 <div className="relative flex items-center justify-center w-64 h-64 mb-8">
-                  <div className="absolute inset-0 rounded-full border border-yellow-500/15" />
+                  <div className={`absolute inset-0 rounded-full border ${dot.ring}`} />
                   <motion.div
                     animate={controls}
                     initial={{ scale: 0.28 }}
                     className="w-48 h-48 rounded-full"
-                    style={{
-                      background: "radial-gradient(circle at 38% 36%, #fde68a 0%, #f59e0b 55%, #b45309 100%)",
-                      boxShadow: "0 0 48px 8px rgba(251,191,36,0.28), 0 0 100px 20px rgba(245,158,11,0.13)",
-                    }}
+                    style={{ background: dot.gradient, boxShadow: dot.shadow }}
                   />
                   {s.userGoal && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-[10px] text-amber-900/80 font-semibold text-center px-6 leading-tight uppercase tracking-wider">
+                      <p className={`text-[10px] ${dot.goalText} font-semibold text-center px-6 leading-tight uppercase tracking-wider`}>
                         {s.userGoal}
                       </p>
                     </div>
@@ -283,7 +329,7 @@ export default function Urge() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.85 }}
                     transition={{ duration: 0.3 }}
-                    className="text-2xl font-black text-amber-400 mb-2 tracking-wide"
+                    className={`text-2xl font-black ${dot.label} mb-2 tracking-wide`}
                   >
                     {getPhaseLabel(breathPhase)}
                   </motion.div>

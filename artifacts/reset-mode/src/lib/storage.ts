@@ -1,8 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
 
-export type HabitType = "porn" | "dating_apps" | "social_media" | "all" | null;
+export type HabitType =
+  | "porn"
+  | "dating_apps"
+  | "scrolling"
+  | "spending"
+  | "other"
+  | "social_media"
+  | "all"
+  | null;
 export type DangerZonePreset = "late_night" | "early_morning" | "afternoon" | "anytime" | "custom";
 export type DangerZoneIntensity = "light" | "normal" | "strong";
+export type DotColor = "gold" | "green" | "silver";
+
+export const HABIT_LABELS: Record<NonNullable<HabitType>, string> = {
+  porn: "Porn",
+  dating_apps: "Dating apps",
+  scrolling: "Endless scrolling",
+  spending: "Spending on apps",
+  other: "Other unwanted habit",
+  // legacy values mapped to the closest current label
+  social_media: "Endless scrolling",
+  all: "Other unwanted habit",
+};
+
+export function habitLabel(habit: HabitType): string {
+  return habit ? HABIT_LABELS[habit] : "";
+}
 
 export interface Spending {
   id: string;
@@ -44,6 +68,8 @@ export interface Settings {
   morningGoalReminderEnabled: boolean;
   dangerZoneGoalReminderEnabled: boolean;
   goalReminderTime: string;
+  // Breathing
+  dotColor: DotColor;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -66,6 +92,7 @@ export const DEFAULT_SETTINGS: Settings = {
   morningGoalReminderEnabled: false,
   dangerZoneGoalReminderEnabled: false,
   goalReminderTime: "08:00",
+  dotColor: "gold",
 };
 
 // Event target for cross-tab or cross-component reactivity

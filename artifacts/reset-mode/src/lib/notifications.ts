@@ -63,7 +63,7 @@ export function sendBrowserNotification(message: string): boolean {
       icon: "/favicon.ico",
       tag: "danger-zone",
       renotify: true,
-    });
+    } as NotificationOptions & { renotify: boolean });
     return true;
   } catch {
     return false;

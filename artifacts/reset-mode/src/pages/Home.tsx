@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Settings, Zap, CheckCircle, TrendingUp, Clock, DollarSign, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useStreakInfo, useUrgesDefeated, useStartDate, useSpendings, useStorage } from "@/lib/storage";
+import { useStreakInfo, useUrgesDefeated, useStartDate, useSpendings, useStorage, habitLabel } from "@/lib/storage";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import type { HabitType } from "@/lib/storage";
 
@@ -56,13 +56,6 @@ export default function Home() {
     : 0;
   const moneySaved = ((totalMonthlySpend / 30) * daysSinceStart).toFixed(2);
 
-  const habitLabel: Record<NonNullable<HabitType>, string> = {
-    porn: "Pornography",
-    dating_apps: "Dating Apps",
-    social_media: "Social Media",
-    all: "All Digital Habits",
-  };
-
   return (
     <div className="min-h-screen bg-background pb-24">
       {showOnboarding && (
@@ -80,7 +73,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Reset Mode</h1>
             {habit && (
               <p className="text-sm text-muted-foreground mt-0.5">
-                Breaking: <span className="text-primary font-medium">{habitLabel[habit]}</span>
+                Breaking: <span className="text-primary font-medium">{habitLabel(habit)}</span>
               </p>
             )}
           </div>
@@ -156,7 +149,9 @@ export default function Home() {
           </div>
           <p className="text-sm text-foreground font-medium leading-relaxed">
             {currentStreak === 0
-              ? "Every journey starts with a single clean day. This is yours."
+              ? habit
+                ? `Every reset starts with one clean day. Today you choose your goal over ${habitLabel(habit).toLowerCase()}.`
+                : "Every journey starts with a single clean day. This is yours."
               : currentStreak < 7
               ? "Win the next 2 minutes. That is all you need."
               : currentStreak < 14
