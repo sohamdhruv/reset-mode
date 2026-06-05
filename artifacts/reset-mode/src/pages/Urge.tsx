@@ -312,22 +312,21 @@ export default function Urge() {
                     className="w-40 h-40 sm:w-48 sm:h-48 rounded-full"
                     style={{ background: dot.gradient, boxShadow: dot.shadow }}
                   />
-                  {/* Breathing instruction inside the circle */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={breathPhase}
-                        initial={{ opacity: 0, scale: 0.85 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.85 }}
-                        transition={{ duration: 0.3 }}
-                        className={`text-2xl font-black ${dot.goalText} tracking-wide`}
-                      >
-                        {getPhaseLabel(breathPhase)}
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
                 </div>
+
+                {/* Phase label */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={breathPhase}
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.85 }}
+                    transition={{ duration: 0.3 }}
+                    className={`text-3xl font-black ${dot.label} mb-2 tracking-wide`}
+                  >
+                    {getPhaseLabel(breathPhase)}
+                  </motion.div>
+                </AnimatePresence>
 
                 {/* Timer */}
                 <div className="text-lg font-mono text-muted-foreground mb-8 tabular-nums">
