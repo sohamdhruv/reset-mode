@@ -203,7 +203,7 @@ export default function Urge() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.5 }}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col pb-28"
             >
               {/* Back */}
               <button
@@ -277,12 +277,12 @@ export default function Urge() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.6 }}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col pb-28"
             >
               {/* Back */}
               <button
                 onClick={() => setLocation("/")}
-                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-6 text-sm"
+                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm"
               >
                 <ArrowLeft size={16} />
                 Back
@@ -296,7 +296,7 @@ export default function Urge() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.6 }}
-                  className="text-xl font-black text-foreground text-center leading-snug mb-10 px-2"
+                  className="text-xl font-black text-foreground text-center leading-snug mb-6 px-2"
                 >
                   {ROTATING_MESSAGES[messageIndex]}
                 </motion.p>
@@ -304,12 +304,12 @@ export default function Urge() {
 
               {/* Breathing circle */}
               <div className="flex flex-col items-center flex-1 justify-center">
-                <div className="relative flex items-center justify-center w-64 h-64 mb-8">
+                <div className="relative flex items-center justify-center w-52 h-52 sm:w-64 sm:h-64 mb-6 sm:mb-8">
                   <div className={`absolute inset-0 rounded-full border ${dot.ring}`} />
                   <motion.div
                     animate={controls}
                     initial={{ scale: 0.28 }}
-                    className="w-48 h-48 rounded-full"
+                    className="w-40 h-40 sm:w-48 sm:h-48 rounded-full"
                     style={{ background: dot.gradient, boxShadow: dot.shadow }}
                   />
                   {s.userGoal && (
