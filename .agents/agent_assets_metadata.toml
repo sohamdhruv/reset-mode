@@ -1,0 +1,13 @@
+uploads = []
+
+[[generated]]
+id = "uIQmJwMrDtDkpWFxkut2_"
+uri = "file://artifacts/reset-mode/public/app-icon.png"
+type = "image"
+title = "reset mode app icon"
+
+[[outputs]]
+id = "c9qNbYEZp33QPn_DyeX-f"
+uri = "file://artifacts/reset-mode/public/app-icon.png"
+type = "image"
+title = "Reset Mode — App Icon"
