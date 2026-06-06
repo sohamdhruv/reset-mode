@@ -63,7 +63,13 @@ export default function PrivacyPolicy() {
           <div className="p-4 bg-card border border-border rounded-xl">
             <h3 className="text-sm font-semibold text-foreground mb-1.5">Contact</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              For questions or support, contact: YOUR_EMAIL_HERE
+              For questions or support, contact:{" "}
+              <a
+                href="mailto:soham.dhruv@gmail.com"
+                className="text-primary underline underline-offset-2 break-all"
+              >
+                soham.dhruv@gmail.com
+              </a>
             </p>
           </div>
         </div>
