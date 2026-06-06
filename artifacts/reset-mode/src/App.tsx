@@ -13,6 +13,7 @@ import SpendingPage from "@/pages/Spending";
 import Journal from "@/pages/Journal";
 import Plan from "@/pages/Plan";
 import Settings from "@/pages/Settings";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ function AppShell() {
         <Route path="/journal" component={Journal} />
         <Route path="/plan" component={Plan} />
         <Route path="/settings" component={Settings} />
+        <Route path="/privacy" component={PrivacyPolicy} />
         <Route component={NotFound} />
       </Switch>
       <BottomNav />

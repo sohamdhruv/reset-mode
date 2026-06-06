@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Bell, MessageSquare, Target, X, ShieldAlert, Zap, Palette, Info } from "lucide-react";
+import { ArrowLeft, Bell, MessageSquare, Target, X, ShieldAlert, Zap, Palette, Info, ChevronRight, Shield } from "lucide-react";
 import { useLocation } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -515,6 +515,22 @@ export default function Settings() {
           <p className="mt-2 text-center text-xs text-muted-foreground leading-relaxed">
             Share what helped, what felt confusing, or what you want added next.
           </p>
+        </div>
+
+        {/* ── Legal ────────────────────────────────────────── */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield size={14} className="text-muted-foreground" />
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Legal</span>
+          </div>
+          <button
+            data-testid="button-privacy-policy"
+            onClick={() => setLocation("/privacy")}
+            className="flex items-center justify-between w-full rounded-xl border border-border bg-card py-3.5 px-4 text-sm font-semibold text-foreground active:opacity-70 transition-opacity"
+          >
+            <span>Privacy Policy</span>
+            <ChevronRight size={16} className="shrink-0 text-muted-foreground" />
+          </button>
         </div>
       </div>
     </div>
