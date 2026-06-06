@@ -496,7 +496,7 @@ export default function Settings() {
           </div>
           <div className="p-4 bg-card border border-border rounded-xl">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Reset Mode is a self-help tool for building discipline and reducing unwanted digital habits. It is not medical advice or a replacement for professional support.
+              Reset Mode is a self-help tool for building discipline and reducing unwanted digital habits. It is not medical advice, therapy, diagnosis, or a replacement for professional support.
             </p>
           </div>
         </div>

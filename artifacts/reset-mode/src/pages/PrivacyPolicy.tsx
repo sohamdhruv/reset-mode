@@ -73,6 +73,10 @@ export default function PrivacyPolicy() {
             </p>
           </div>
         </div>
+
+        <p className="text-xs text-muted-foreground/80 leading-relaxed text-center mt-8 px-2">
+          Reset Mode is a self-help tool for building discipline and reducing unwanted digital habits. It is not medical advice, therapy, diagnosis, or a replacement for professional support.
+        </p>
       </div>
     </div>
   );
