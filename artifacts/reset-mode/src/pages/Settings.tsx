@@ -18,10 +18,10 @@ import {
 } from "@/lib/notifications";
 
 const SAMPLE_NOTIFICATIONS = [
-  "Your danger time is coming. Plan your next 2 hours.",
-  "Do not open the loop. Tap here for a 2-minute reset.",
-  "Check in now. One honest tap keeps your progress alive.",
-  "You have already defeated urges before. Do it again.",
+  "Your future self is waiting. Don't disappear into the habit.",
+  "You are one choice away from protecting your streak.",
+  "Don't open the old loop. Open Reset Mode.",
+  "You don't need motivation. You need one clean decision.",
 ];
 
 const DANGER_PRESETS: { value: DangerZonePreset; label: string; start: string; end: string }[] = [

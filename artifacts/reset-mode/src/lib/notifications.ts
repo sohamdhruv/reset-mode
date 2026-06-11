@@ -1,25 +1,28 @@
 export const DANGER_MESSAGES = [
-  "Your danger zone is starting. Lock your phone away.",
-  "You have beaten this before. Do it again right now.",
-  "Open Reset Mode instead. 2 minutes is all you need.",
-  "What would your future self choose right now?",
-  "You are stronger than this urge. Prove it.",
-  "Pause. Breathe. Redirect.",
-  "Do not negotiate with the urge. Change your environment.",
+  "Your future self is waiting. Don't disappear into the habit.",
+  "You are one choice away from protecting your streak.",
+  "This is the exact moment Reset Mode was built for.",
+  "Don't open the old loop. Open Reset Mode.",
+  "The urge is trying to pull you away. Come back.",
+  "Before you give in, breathe with the light.",
+  "You don't need motivation. You need one clean decision.",
+  "Your danger zone has started. Protect your mind now.",
+  "Don't trade tomorrow's confidence for tonight's impulse.",
+  "Open Reset Mode before the habit controls you.",
 ];
 
 export const GOAL_DANGER_MESSAGES = (goal: string) => [
-  `Remember your goal: ${goal}. Protect it today.`,
-  `Do not trade your future for a temporary urge.`,
-  `Your danger zone is starting. Stay close to your goal.`,
-  `Open Reset Mode for 2 minutes and protect ${goal}.`,
-  `Your future self is built by this choice.`,
+  `Protect ${goal}. Open Reset Mode for 2 minutes.`,
+  `Do not trade ${goal} for a temporary urge.`,
+  `Your future self chose ${goal}. Stay with it.`,
+  `You said ${goal} matters. Prove it for 2 minutes.`,
+  `Your danger zone has started. ${goal} needs you right now.`,
 ];
 
 export const GOAL_MORNING_MESSAGES = (goal: string) => [
-  `Good morning. Your goal today: ${goal}. Make it count.`,
-  `Start strong. Remember what you are building: ${goal}.`,
-  `Today is another step toward ${goal}. Stay on track.`,
+  `Good morning. Your future self chose ${goal}. Make it count.`,
+  `Start strong. Every clean decision builds ${goal}.`,
+  `Today is one more step toward ${goal}. Stay with it.`,
 ];
 
 let messageIndex = 0;
