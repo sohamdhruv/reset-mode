@@ -35,10 +35,10 @@ export function useDangerZoneNotifications() {
     const intervalMs = INTENSITY_MS[s.dangerZoneIntensity] ?? INTENSITY_MS.normal;
     const goal = s.dangerZoneGoalReminderEnabled && s.userGoal ? s.userGoal : undefined;
 
-    function fire() {
+    async function fire() {
       if (!isInDangerWindow(s.dangerZoneStart, s.dangerZoneEnd)) return;
       const message = nextDangerMessage(goal);
-      const sent = sendBrowserNotification(message);
+      const sent = await sendBrowserNotification(message);
       if (!sent) fireInAppReminder(message);
     }
 
@@ -61,7 +61,7 @@ export function useDangerZoneNotifications() {
   useEffect(() => {
     if (!s.morningGoalReminderEnabled || !s.userGoal) return;
 
-    const checkMorning = () => {
+    const checkMorning = async () => {
       const now = new Date();
       const today = now.toISOString().split("T")[0];
       if (morningFiredRef.current === today) return; // already fired today
@@ -73,7 +73,7 @@ export function useDangerZoneNotifications() {
       if (currentMins >= targetMins && currentMins < targetMins + 2) {
         morningFiredRef.current = today;
         const message = nextMorningGoalMessage(s.userGoal);
-        const sent = sendBrowserNotification(message);
+        const sent = await sendBrowserNotification(message);
         if (!sent) fireInAppReminder(message);
       }
     };

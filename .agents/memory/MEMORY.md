@@ -1,0 +1,1 @@
+- [Web notifications on mobile](web-notifications-mobile.md) — Android Chrome ignores `new Notification()`; must use ServiceWorkerRegistration.showNotification(); closed-app push needs a VAPID server.

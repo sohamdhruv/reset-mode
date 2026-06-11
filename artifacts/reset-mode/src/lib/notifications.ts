@@ -44,26 +44,79 @@ export function nextMorningGoalMessage(goal: string): string {
 
 // ─── Browser Notification API ────────────────────────────────────────────────
 
+const NOTIFICATION_ICON = `${import.meta.env.BASE_URL}icon-192.png`;
+
 export function notificationsSupported(): boolean {
   return typeof window !== "undefined" && "Notification" in window;
+}
+
+/** True when running as an installed PWA (best chance of background delivery). */
+export function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches === true ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
+/** Service workers are required for notifications on Android Chrome. */
+export function serviceWorkerSupported(): boolean {
+  return typeof navigator !== "undefined" && "serviceWorker" in navigator;
+}
+
+/** Register the notification service worker. Safe to call multiple times. */
+export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (!serviceWorkerSupported()) return null;
+  try {
+    return await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, {
+      scope: import.meta.env.BASE_URL,
+    });
+  } catch {
+    return null;
+  }
 }
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!notificationsSupported()) return "denied";
   if (Notification.permission === "granted") return "granted";
   if (Notification.permission === "denied") return "denied";
-  return Notification.requestPermission();
+  const result = await Notification.requestPermission();
+  // Make sure the SW is registered as soon as the user opts in.
+  if (result === "granted") void registerServiceWorker();
+  return result;
 }
 
-export function sendBrowserNotification(message: string): boolean {
+/**
+ * Show a system notification. Prefers the service worker registration
+ * (the only method that works on Android Chrome), falling back to the
+ * Notification constructor on desktop browsers.
+ */
+export async function sendBrowserNotification(message: string): Promise<boolean> {
   if (!notificationsSupported() || Notification.permission !== "granted") return false;
+
+  const title = "Reset Mode";
+  const options = {
+    body: message,
+    icon: NOTIFICATION_ICON,
+    badge: NOTIFICATION_ICON,
+    tag: "reset-mode",
+    renotify: true,
+  } as NotificationOptions;
+
+  if (serviceWorkerSupported()) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        await reg.showNotification(title, options);
+        return true;
+      }
+    } catch {
+      /* fall through to constructor */
+    }
+  }
+
   try {
-    new Notification("Reset Mode", {
-      body: message,
-      icon: "/favicon.ico",
-      tag: "danger-zone",
-      renotify: true,
-    } as NotificationOptions & { renotify: boolean });
+    new Notification(title, options);
     return true;
   } catch {
     return false;

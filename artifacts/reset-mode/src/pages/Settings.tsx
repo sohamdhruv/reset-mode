@@ -74,9 +74,15 @@ export default function Settings() {
     setPermStatus(result);
   }
 
-  function handleTestNotification() {
+  async function handleTestNotification() {
     const msg = DANGER_MESSAGES[0];
-    const sent = sendBrowserNotification(msg);
+    let granted = notificationsSupported() && Notification.permission === "granted";
+    if (notificationsSupported() && Notification.permission === "default") {
+      const result = await requestNotificationPermission();
+      setPermStatus(result);
+      granted = result === "granted";
+    }
+    const sent = granted ? await sendBrowserNotification(msg) : false;
     if (!sent) fireInAppReminder(msg);
   }
 
@@ -145,6 +151,14 @@ export default function Settings() {
                   <Bell size={16} className="text-muted-foreground shrink-0 mt-0.5" />
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Push notifications are not supported in this browser. In-app reminders will show while the app is open.
+                  </p>
+                </div>
+              )}
+              {notificationsSupported() && (
+                <div className="mb-3 p-3 bg-card border border-border rounded-xl flex items-start gap-3">
+                  <Info size={16} className="text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Background notifications may require installing Reset Mode to your home screen and allowing notifications.
                   </p>
                 </div>
               )}
