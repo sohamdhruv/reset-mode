@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: reset-master
+    description: Reset Master guided AI guidance
 paths:
   /healthz:
     get:
@@ -24,6 +26,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /reset-master/guidance:
+    post:
+      operationId: generateResetMasterGuidance
+      tags: [reset-master]
+      summary: Generate Reset Master guidance
+      description: >
+        Returns short, calm, disciplined self-help guidance for a chosen
+        simulated weak moment and the action the user picked. Guided use only,
+        not an open chatbot. Never medical advice.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetMasterInput"
+      responses:
+        "200":
+          description: Guidance generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetMasterGuidance"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorMessage"
+        "500":
+          description: Guidance unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorMessage"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +69,43 @@ components:
           type: string
       required:
         - status
+    ResetMasterInput:
+      type: object
+      required:
+        - simulation
+        - action
+      properties:
+        simulation:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Label of the simulated weak moment the user is practicing.
+        action:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: The action the user chose to take in the scenario.
+        goal:
+          type: string
+          maxLength: 300
+          description: The user's personal goal, for context.
+        habit:
+          type: string
+          maxLength: 200
+          description: The habit the user is breaking, for context.
+    ResetMasterGuidance:
+      type: object
+      required:
+        - guidance
+      properties:
+        guidance:
+          type: string
+          description: Short calm disciplined guidance, 2-4 sentences.
+    ApiErrorMessage:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
 

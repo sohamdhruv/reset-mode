@@ -5,9 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
 
 export interface ResetMasterInput {
   /**
@@ -33,13 +30,3 @@ export interface ResetMasterInput {
      */
   habit?: string;
 }
-
-export interface ResetMasterGuidance {
-  /** Short calm disciplined guidance, 2-4 sentences. */
-  guidance: string;
-}
-
-export interface ApiErrorMessage {
-  error: string;
-}
-
