@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Settings, Zap, CheckCircle, TrendingUp, Clock, DollarSign, Target } from "lucide-react";
+import { Settings, Zap, CheckCircle, TrendingUp, Clock, DollarSign, Target, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useStreakInfo, useUrgesDefeated, useStartDate, useSpendings, useStorage, habitLabel } from "@/lib/storage";
@@ -123,6 +123,16 @@ export default function Home() {
         >
           <Zap size={22} className="mr-2" />
           I Have an Urge
+        </Button>
+
+        <Button
+          data-testid="button-practice"
+          variant="outline"
+          onClick={() => setLocation("/simulation")}
+          className="w-full h-14 rounded-xl border-border text-foreground font-semibold tracking-tight mb-3"
+        >
+          <Dumbbell size={20} className="mr-2 text-primary" />
+          Practice a Weak Moment
         </Button>
 
         {!isCleanToday ? (

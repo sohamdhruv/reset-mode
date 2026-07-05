@@ -44,6 +44,16 @@ export interface JournalEntry {
   didInstead: string;
 }
 
+export interface SimulationResult {
+  id: string;
+  date: string;
+  simulation: string;
+  action: string;
+  guidance: string;
+  reflection: string;
+  usedAI: boolean;
+}
+
 export type GoalDistraction = "yes" | "sometimes" | "no" | "";
 
 export interface Settings {
@@ -198,6 +208,10 @@ export function useSpendings() {
 
 export function useJournalEntries() {
   return useStorage<JournalEntry[]>("resetMode_journalEntries", []);
+}
+
+export function useSimulations() {
+  return useStorage<SimulationResult[]>("resetMode_simulations", []);
 }
 
 export function usePlanCompleted() {

@@ -8,6 +8,7 @@ import { InAppReminder } from "@/components/InAppReminder";
 import { useDangerZoneNotifications } from "@/hooks/useDangerZoneNotifications";
 import Home from "@/pages/Home";
 import Urge from "@/pages/Urge";
+import Simulation from "@/pages/Simulation";
 import Tracker from "@/pages/Tracker";
 import SpendingPage from "@/pages/Spending";
 import Journal from "@/pages/Journal";
@@ -27,6 +28,7 @@ function AppShell() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/urge" component={Urge} />
+        <Route path="/simulation" component={Simulation} />
         <Route path="/tracker" component={Tracker} />
         <Route path="/spending" component={SpendingPage} />
         <Route path="/journal" component={Journal} />
