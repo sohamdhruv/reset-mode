@@ -5,6 +5,7 @@ export type HabitType =
   | "dating_apps"
   | "scrolling"
   | "spending"
+  | "food"
   | "other"
   | "social_media"
   | "all"
@@ -18,6 +19,7 @@ export const HABIT_LABELS: Record<NonNullable<HabitType>, string> = {
   dating_apps: "Dating apps",
   scrolling: "Endless scrolling",
   spending: "Spending on apps",
+  food: "Food cravings",
   other: "Other unwanted habit",
   all: "Full digital reset",
   // legacy values mapped to the closest current label

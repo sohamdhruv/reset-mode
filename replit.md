@@ -22,7 +22,8 @@ Reset Mode is a mobile-first, dark-themed PWA that helps people break compulsive
 
 ## Where things live
 
-- `artifacts/reset-mode/src/lib/storage.ts` — all persisted state: typed `localStorage` hooks (`useStorage`, `useSettings`, `useSimulations`, streaks, spendings, journal) and the `resetMode_*` storage keys. Source of truth for user data shapes.
+- `artifacts/reset-mode/src/lib/storage.ts` — all persisted state: typed `localStorage` hooks (`useStorage`, `useSettings`, `useSimulations`, streaks, spendings, journal) and the `resetMode_*` storage keys. Source of truth for user data shapes. `HabitType` + `HABIT_LABELS` define the selectable habits.
+- `artifacts/reset-mode/src/lib/habitContent.ts` — additive per-habit content overrides (reminder/danger messages, streak-bucketed daily-reminder copy, journal copy). Habits without an entry return `null`/`undefined` and fall back to the existing generic copy, so it never changes behavior for habits it does not cover.
 - `artifacts/reset-mode/src/pages/` — one file per route (`Home`, `Urge`, `Simulation`, `Tracker`, `Spending`, `Journal`, `Plan`, `Settings`); routes wired in `src/App.tsx`.
 - `artifacts/reset-mode/src/lib/simulation.ts` — Simulation Mode content (scenarios, actions, reflections), the scripted-guidance fallback, and `fetchResetMasterGuidance` (robust `/api` client that falls back on any failure).
 - `artifacts/api-server/src/routes/resetMaster.ts` — `POST /api/reset-master/guidance` AI route (guided-only, validated, graceful errors); mounted in `src/routes/index.ts`.

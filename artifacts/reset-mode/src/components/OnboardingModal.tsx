@@ -6,10 +6,11 @@ import { useStorage, DEFAULT_SETTINGS } from "@/lib/storage";
 import type { HabitType, DangerZonePreset, GoalDistraction, Settings } from "@/lib/storage";
 
 const HABITS: { value: NonNullable<HabitType>; label: string; desc: string }[] = [
-  { value: "porn", label: "Pornography", desc: "Quit compulsive viewing habits" },
-  { value: "dating_apps", label: "Dating apps", desc: "Break the swipe loop" },
   { value: "scrolling", label: "Endless scrolling", desc: "Reclaim attention and time" },
+  { value: "dating_apps", label: "Dating apps", desc: "Break the swipe loop" },
   { value: "spending", label: "Spending on apps", desc: "Stop wasting money on coins, boosts, or paid features" },
+  { value: "food", label: "Food cravings", desc: "Stop stress eating and late-night snacking" },
+  { value: "porn", label: "Pornography", desc: "Quit compulsive viewing habits" },
   { value: "other", label: "Other unwanted habit", desc: "Reset any habit pulling you away from your goals" },
   { value: "all", label: "Full digital reset", desc: "Reset multiple digital habits at once" },
 ];

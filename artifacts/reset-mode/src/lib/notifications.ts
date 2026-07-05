@@ -27,12 +27,18 @@ export const GOAL_MORNING_MESSAGES = (goal: string) => [
 
 let messageIndex = 0;
 let goalMessageIndex = 0;
+let habitMessageIndex = 0;
 
-export function nextDangerMessage(goal?: string): string {
+export function nextDangerMessage(goal?: string, habitMessages?: string[]): string {
   if (goal) {
     const messages = GOAL_DANGER_MESSAGES(goal);
     const msg = messages[goalMessageIndex % messages.length];
     goalMessageIndex++;
+    return msg;
+  }
+  if (habitMessages && habitMessages.length > 0) {
+    const msg = habitMessages[habitMessageIndex % habitMessages.length];
+    habitMessageIndex++;
     return msg;
   }
   const msg = DANGER_MESSAGES[messageIndex % DANGER_MESSAGES.length];

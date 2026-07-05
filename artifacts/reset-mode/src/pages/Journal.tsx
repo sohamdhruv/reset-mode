@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useJournalEntries } from "@/lib/storage";
-import type { JournalEntry } from "@/lib/storage";
+import { useJournalEntries, useStorage } from "@/lib/storage";
+import { habitJournalCopy } from "@/lib/habitContent";
+import type { JournalEntry, HabitType } from "@/lib/storage";
 
 const MOODS = ["Bored", "Lonely", "Stressed", "Tired", "Rejected", "Anxious"];
 
@@ -30,6 +31,8 @@ function dangerHour(entries: JournalEntry[]): string {
 
 export default function Journal() {
   const [entries, setEntries] = useJournalEntries();
+  const [habit] = useStorage<HabitType>("resetMode_habit", null);
+  const journalCopy = habitJournalCopy(habit);
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -110,17 +113,17 @@ export default function Journal() {
                 <Label className="text-sm text-muted-foreground mb-1.5 block">What triggered it?</Label>
                 <Input
                   data-testid="input-trigger"
-                  placeholder="e.g. Sitting alone, late night, bored..."
+                  placeholder={journalCopy?.triggerPlaceholder ?? "e.g. Sitting alone, late night, bored..."}
                   value={trigger}
                   onChange={(e) => setTrigger(e.target.value)}
                   className="bg-background border-border"
                 />
               </div>
               <div>
-                <Label className="text-sm text-muted-foreground mb-1.5 block">Which app / habit called you?</Label>
+                <Label className="text-sm text-muted-foreground mb-1.5 block">{journalCopy?.calledByLabel ?? "Which app / habit called you?"}</Label>
                 <Input
                   data-testid="input-app-wanted"
-                  placeholder="e.g. Tinder, Instagram..."
+                  placeholder={journalCopy?.calledByPlaceholder ?? "e.g. Tinder, Instagram..."}
                   value={appWanted}
                   onChange={(e) => setAppWanted(e.target.value)}
                   className="bg-background border-border"

@@ -7,6 +7,8 @@ import {
   ScrollText,
   CreditCard,
   Flame,
+  UtensilsCrossed,
+  Cookie,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,7 +29,7 @@ export interface Reflection {
   label: string;
 }
 
-// 8 common weak moments people practice before they happen for real.
+// Common weak moments people practice before they happen for real.
 export const SIMULATIONS: Simulation[] = [
   {
     id: "late_night",
@@ -84,6 +86,20 @@ export const SIMULATIONS: Simulation[] = [
     Icon: Flame,
     scenario:
       "Something on your feed triggered the old craving out of nowhere. Your body reacts before your mind does, and the urge spikes fast.",
+  },
+  {
+    id: "fridge_pull",
+    label: "Late night fridge pull",
+    Icon: UtensilsCrossed,
+    scenario:
+      "It is late and the kitchen is quietly calling. You are not really hungry, but the fridge promises comfort. Your feet are already drifting toward it.",
+  },
+  {
+    id: "stress_snack",
+    label: "Stress snacking after a hard day",
+    Icon: Cookie,
+    scenario:
+      "The day drained you, and food feels like the fastest way to numb it. The snack promises quick relief, even though the stress will still be waiting after the last bite.",
   },
 ];
 

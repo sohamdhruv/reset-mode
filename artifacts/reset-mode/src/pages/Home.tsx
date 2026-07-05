@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useStreakInfo, useUrgesDefeated, useStartDate, useSpendings, useStorage, habitLabel } from "@/lib/storage";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { habitDailyReminder } from "@/lib/habitContent";
 import type { HabitType } from "@/lib/storage";
 
 function StatCard({ icon: Icon, label, value, sub }: { icon: React.ElementType; label: string; value: string | number; sub?: string }) {
@@ -158,15 +159,16 @@ export default function Home() {
             <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Daily Reminder</span>
           </div>
           <p className="text-sm text-foreground font-medium leading-relaxed">
-            {currentStreak === 0
-              ? habit
-                ? `Every reset starts with one clean day. Today you choose your goal over ${habitLabel(habit).toLowerCase()}.`
-                : "Every journey starts with a single clean day. This is yours."
-              : currentStreak < 7
-              ? "Win the next 2 minutes. That is all you need."
-              : currentStreak < 14
-              ? "You have already defeated urges before. Do it again."
-              : "You are not quitting pleasure. You are taking back control."}
+            {habitDailyReminder(habit, currentStreak) ??
+              (currentStreak === 0
+                ? habit
+                  ? `Every reset starts with one clean day. Today you choose your goal over ${habitLabel(habit).toLowerCase()}.`
+                  : "Every journey starts with a single clean day. This is yours."
+                : currentStreak < 7
+                ? "Win the next 2 minutes. That is all you need."
+                : currentStreak < 14
+                ? "You have already defeated urges before. Do it again."
+                : "You are not quitting pleasure. You are taking back control.")}
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useStorage, DEFAULT_SETTINGS } from "@/lib/storage";
-import type { Settings } from "@/lib/storage";
+import type { Settings, HabitType } from "@/lib/storage";
+import { habitDangerMessages } from "@/lib/habitContent";
 import {
   isInDangerWindow,
   nextDangerMessage,
@@ -18,6 +19,7 @@ const INTENSITY_MS: Record<string, number> = {
 
 export function useDangerZoneNotifications() {
   const [settings] = useStorage<Settings>("resetMode_settings", DEFAULT_SETTINGS);
+  const [habit] = useStorage<HabitType>("resetMode_habit", null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const morningFiredRef = useRef<string | null>(null); // tracks which day the morning reminder fired
 
@@ -34,10 +36,11 @@ export function useDangerZoneNotifications() {
 
     const intervalMs = INTENSITY_MS[s.dangerZoneIntensity] ?? INTENSITY_MS.normal;
     const goal = s.dangerZoneGoalReminderEnabled && s.userGoal ? s.userGoal : undefined;
+    const habitMsgs = habitDangerMessages(habit);
 
     async function fire() {
       if (!isInDangerWindow(s.dangerZoneStart, s.dangerZoneEnd)) return;
-      const message = nextDangerMessage(goal);
+      const message = nextDangerMessage(goal, habitMsgs);
       const sent = await sendBrowserNotification(message);
       if (!sent) fireInAppReminder(message);
     }
@@ -55,6 +58,7 @@ export function useDangerZoneNotifications() {
     s.dangerZoneIntensity,
     s.dangerZoneGoalReminderEnabled,
     s.userGoal,
+    habit,
   ]);
 
   // ── Morning goal reminder — polls every minute, fires once per day ──────────
