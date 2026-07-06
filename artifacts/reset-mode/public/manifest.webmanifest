@@ -1,7 +1,8 @@
 {
+  "id": "/?source=pwa",
   "name": "Reset Mode",
   "short_name": "Reset Mode",
-  "description": "A self-help tool for building discipline and reducing unwanted digital habits.",
+  "description": "Break the loop before it controls you. A free 2-minute reset for unwanted digital habits.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
