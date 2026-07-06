@@ -44,6 +44,13 @@ export interface JournalEntry {
   trigger: string;
   appWanted: string;
   didInstead: string;
+  // Additive: entries auto-archived from Self-Reflection Mode. Manual urge logs
+  // leave these undefined, so existing entries keep behaving exactly as before.
+  kind?: "reflection";
+  betterChoice?: string;
+  lesson?: string;
+  nextAction?: string;
+  reflectionId?: string;
 }
 
 export interface SimulationResult {

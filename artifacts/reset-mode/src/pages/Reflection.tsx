@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Sparkles, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useReflections, type ReflectionEntry } from "@/lib/storage";
+import { useReflections, useJournalEntries, type ReflectionEntry, type JournalEntry } from "@/lib/storage";
 
 const TRIGGERS = [
   "Late night",
@@ -34,6 +34,7 @@ type Phase = "trigger" | "choice" | "write" | "done";
 export default function Reflection() {
   const [, setLocation] = useLocation();
   const [, setReflections] = useReflections();
+  const [, setJournalEntries] = useJournalEntries();
 
   const [phase, setPhase] = useState<Phase>("trigger");
   const [trigger, setTrigger] = useState("");
@@ -52,15 +53,41 @@ export default function Reflection() {
   }
 
   function save() {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const date = new Date().toISOString();
+    const cleanLesson = lesson.trim();
+    const cleanNext = nextAction.trim();
+
     const entry: ReflectionEntry = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      date: new Date().toISOString(),
+      id,
+      date,
       trigger,
       betterChoice,
-      lesson: lesson.trim(),
-      nextAction: nextAction.trim(),
+      lesson: cleanLesson,
+      nextAction: cleanNext,
     };
     setReflections((prev) => [entry, ...prev]);
+
+    // Also archive the reflection in the Journal so it sits alongside manual
+    // entries (tagged "Reflection"). Dedupe by reflectionId so a single
+    // reflection can never create two journal entries.
+    const journalEntry: JournalEntry = {
+      id: `refl-${id}`,
+      date,
+      kind: "reflection",
+      mood: trigger,
+      trigger,
+      betterChoice,
+      lesson: cleanLesson,
+      nextAction: cleanNext,
+      appWanted: "",
+      didInstead: "",
+      reflectionId: id,
+    };
+    setJournalEntries((prev) =>
+      prev.some((e) => e.reflectionId === id) ? prev : [journalEntry, ...prev],
+    );
+
     setPhase("done");
   }
 

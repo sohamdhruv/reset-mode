@@ -220,3 +220,48 @@ export const PROTECTIVE_CHOICES: ProtectiveChoice[] = [
       "Rest is a decision too. Let the day end here. Your future self wakes up grateful.",
   },
 ];
+
+// Late night runs from 10pm to 5am — the classic weak-moment window.
+export function isLateNight(date: Date = new Date()): boolean {
+  const h = date.getHours();
+  return h >= 22 || h < 5;
+}
+
+// Picks a Reset Story for the post-breathing urge flow. Prefers "The Late Night
+// Test" when it is late; otherwise rotates through categories not shown recently,
+// only resetting once every category has been seen (so stories do not repeat
+// until all have appeared). The variation within a category reuses the shared
+// rotation counter so repeats stay fresh. Pure function — the caller persists the
+// returned `nextSeen` / `nextRotation`.
+export function pickUrgeStory(
+  seen: string[],
+  rotation: Record<string, number>,
+  now: Date = new Date(),
+): {
+  category: StoryCategory;
+  variationIndex: number;
+  nextSeen: string[];
+  nextRotation: Record<string, number>;
+} {
+  let pool = STORY_CATEGORIES.filter((c) => !seen.includes(c.id));
+  if (pool.length === 0) pool = STORY_CATEGORIES;
+
+  let category: StoryCategory;
+  if (isLateNight(now)) {
+    category =
+      pool.find((c) => c.id === "late_night_test") ??
+      STORY_CATEGORIES.find((c) => c.id === "late_night_test") ??
+      pool[0];
+  } else {
+    category = pool[0];
+  }
+
+  const current = rotation[category.id] ?? 0;
+  const variationIndex = current % category.stories.length;
+  const nextRotation = { ...rotation, [category.id]: current + 1 };
+
+  let nextSeen = seen.includes(category.id) ? seen : [...seen, category.id];
+  if (nextSeen.length >= STORY_CATEGORIES.length) nextSeen = [category.id];
+
+  return { category, variationIndex, nextSeen, nextRotation };
+}

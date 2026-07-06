@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, CheckCircle, Lock, PersonStanding, Droplets, Dumbbell, BookOpen, Target } from "lucide-react";
-import { useUrgesDefeated, useSettings, DEFAULT_SETTINGS } from "@/lib/storage";
+import { ArrowLeft, CheckCircle, Lock, PersonStanding, Droplets, Dumbbell, BookOpen, Target, Wind, Sparkles } from "lucide-react";
+import { useUrgesDefeated, useSettings, DEFAULT_SETTINGS, useStorage } from "@/lib/storage";
 import type { DotColor } from "@/lib/storage";
+import { pickUrgeStory, type StoryCategory } from "@/lib/stories";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 
 const FUTURE_SELF = [
@@ -83,7 +84,7 @@ const CYCLE_SECS = INHALE_SECS + HOLD_SECS + EXHALE_SECS; // 22
 const SESSION_SECS = 120;
 
 type BreathPhase = "inhale" | "hold" | "exhale";
-type AppPhase = "prep" | "breathing" | "result" | "actions" | "goalwork" | "complete";
+type AppPhase = "prep" | "breathing" | "result" | "story" | "goalwork" | "complete";
 
 function getBreathPhase(elapsed: number): BreathPhase {
   const pos = elapsed % CYCLE_SECS;
@@ -107,7 +108,10 @@ export default function Urge() {
   const [countdown, setCountdown] = useState(PREP_SECS);
   const [elapsed, setElapsed] = useState(0);
   const [urgesDefeated, setUrgesDefeated] = useUrgesDefeated();
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  const [storySeen, setStorySeen] = useStorage<string[]>("resetMode_urgeStorySeen", []);
+  const [storyRotation, setStoryRotation] = useStorage<Record<string, number>>("resetMode_storyRotation", {});
+  const [storyCategory, setStoryCategory] = useState<StoryCategory | null>(null);
+  const [storyVariation, setStoryVariation] = useState(0);
 
   const controls = useAnimationControls();
   const prevBreathPhase = useRef<BreathPhase | null>(null);
@@ -164,29 +168,42 @@ export default function Urge() {
   }, [appPhase]);
 
   function endEarly() { setAppPhase("result"); }
-  function handleUrgeResult() { setAppPhase("actions"); }
+
+  // After breathing, show a context-aware Reset Story before the celebration.
+  function handleUrgeResult() {
+    const picked = pickUrgeStory(storySeen, storyRotation);
+    setStoryCategory(picked.category);
+    setStoryVariation(picked.variationIndex);
+    setStorySeen(picked.nextSeen);
+    setStoryRotation(picked.nextRotation);
+    setAppPhase("story");
+  }
+
+  function handleBreatheAgain() {
+    setElapsed(0);
+    setCountdown(PREP_SECS);
+    prevBreathPhase.current = null;
+    setAppPhase("prep");
+  }
 
   function handleAction(id: string, nav?: string) {
     if (id === "goalwork") {
-      setSelectedAction(id);
       setAppPhase("goalwork");
       return;
     }
     setUrgesDefeated(urgesDefeated + 1);
     if (nav) { setLocation(nav); }
-    else { setAppPhase("complete"); setTimeout(() => setLocation("/"), 2000); }
+    else { setAppPhase("complete"); }
   }
 
   function finishGoalWork() {
     setUrgesDefeated(urgesDefeated + 1);
     setAppPhase("complete");
-    setTimeout(() => setLocation("/"), 2000);
   }
 
-  function handleSkipActions() {
+  function handleContinue() {
     setUrgesDefeated(urgesDefeated + 1);
     setAppPhase("complete");
-    setTimeout(() => setLocation("/"), 2000);
   }
 
   return (
@@ -378,30 +395,54 @@ export default function Urge() {
             </motion.div>
           )}
 
-          {/* ── Quick actions ── */}
-          {appPhase === "actions" && (
+          {/* ── Reset Story + protective choices ── */}
+          {appPhase === "story" && storyCategory && (
             <motion.div
-              key="actions"
+              key="story"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col pb-28"
             >
-              <div className="text-center mb-8 pt-8">
-                <h2 className="text-xl font-black text-foreground mb-2">Good. Keep the momentum.</h2>
-                <p className="text-muted-foreground text-sm">Choose one action right now:</p>
+              <div className="flex items-center gap-2 mb-4 pt-2">
+                <storyCategory.Icon size={18} className="text-primary shrink-0" />
+                <h2 className="text-lg font-black text-foreground tracking-tight">{storyCategory.title}</h2>
               </div>
 
-              <div className="flex flex-col gap-3 flex-1">
+              <div data-testid="urge-story" className="p-5 rounded-2xl bg-card border border-primary/20 mb-7">
+                {storyCategory.stories[storyVariation].lines.map((line, i) => (
+                  <motion.p
+                    key={i}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 + i * 0.4, duration: 0.5 }}
+                    className="text-base text-foreground leading-relaxed mb-1.5 last:mb-0"
+                  >
+                    {line}
+                  </motion.p>
+                ))}
+              </div>
+
+              <h3 className="text-base font-black text-foreground mb-4">
+                What choice will protect your future right now?
+              </h3>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  data-testid="action-breathe-again"
+                  onClick={handleBreatheAgain}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                >
+                  <Wind size={20} className="text-primary shrink-0" />
+                  <span className="font-semibold text-foreground text-sm">Breathe again</span>
+                </button>
+
                 {QUICK_ACTIONS.map(({ id, label, Icon, nav }) => (
                   <button
                     key={id}
+                    data-testid={`action-${id}`}
                     onClick={() => handleAction(id, nav)}
-                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
-                      selectedAction === id
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-card hover:border-primary/50 hover:bg-primary/5"
-                    }`}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
                   >
                     <Icon size={20} className="text-primary shrink-0" />
                     <span className="font-semibold text-foreground text-sm">{label}</span>
@@ -410,10 +451,11 @@ export default function Urge() {
               </div>
 
               <button
-                onClick={handleSkipActions}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-4"
+                data-testid="button-urge-continue"
+                onClick={handleContinue}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-4 mt-1"
               >
-                Skip — I am fine
+                Continue
               </button>
             </motion.div>
           )}
@@ -451,11 +493,31 @@ export default function Urge() {
               key="complete"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex-1 flex flex-col items-center justify-center text-center"
+              className="flex-1 flex flex-col pb-28"
             >
-              <CheckCircle size={72} className="text-primary mb-5" />
-              <h2 className="text-2xl font-black text-foreground mb-2">Urge defeated.</h2>
-              <p className="text-muted-foreground">One vote for your future self.</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <CheckCircle size={72} className="text-primary mb-5" />
+                <h2 className="text-2xl font-black text-foreground mb-2">Urge defeated.</h2>
+                <p className="text-muted-foreground">One vote for your future self.</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  data-testid="button-urge-done"
+                  onClick={() => setLocation("/")}
+                  className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-bold tracking-tight hover:bg-primary/90 transition-colors"
+                >
+                  Done
+                </button>
+                <button
+                  data-testid="button-urge-reflect"
+                  onClick={() => setLocation("/reflect")}
+                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+                >
+                  <Sparkles size={15} className="text-primary" />
+                  Reflect on this moment (30 sec)
+                </button>
+              </div>
             </motion.div>
           )}
 

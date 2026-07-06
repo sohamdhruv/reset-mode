@@ -1,2 +1,3 @@
 - [Web notifications on mobile](web-notifications-mobile.md) — Android Chrome ignores `new Notification()`; must use ServiceWorkerRegistration.showNotification(); closed-app push needs a VAPID server.
 - [Reset Mode deploy & AI fallback](reset-mode-deploy-ai.md) — Vercel builds ONLY the reset-mode static SPA (no api-server); every /api call needs a graceful offline fallback. App is localStorage-only; never reset user data.
+- [Journal holds reflection entries too](journal-reflection-entries.md) — reflections auto-archive into the Journal list (kind:"reflection"); compute all journal insights from manualEntries only, never raw entries.

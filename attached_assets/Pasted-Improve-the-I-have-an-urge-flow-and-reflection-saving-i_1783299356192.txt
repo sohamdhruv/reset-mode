@@ -1,0 +1,25 @@
+Improve the "I have an urge" flow and reflection saving in Reset Mode. Two changes:
+
+CHANGE 1 — Restructure the urge flow
+
+Current: user taps "I have an urge" then mood selection then breathing dot.
+
+New flow:
+1. User taps "I have an urge" then mood selection (keep as is) then breathing dot session (keep as is).
+2. AFTER the 2-minute breathing session ends, do NOT go straight to the celebration screen. Instead, show a Reset Story screen:
+- Pick a story matching context when possible (if time is late night, prefer "The Late Night Test"; otherwise rotate through unseen stories, avoiding repeats until all have been shown).
+- Story displays in the same calm card style as the existing Reset Story feature.
+- Below the story: the existing question "What choice will protect your future right now?" with the action buttons (Breathe again, Work on my goal 5 minutes, Put phone away, etc.).
+3. After they pick an action (or tap Continue), show the "urge defeated" celebration screen as before, and increment the urge-defeated counter as before.
+4. On the celebration screen, add one small optional button: "Reflect on this moment (30 sec)" that opens the existing Self-Reflection flow. This is optional — the main "Done" button stays primary.
+
+Do NOT include Simulation Mode anywhere in the urge flow. It stays on the Home screen only.
+
+CHANGE 2 — Auto-save reflections to Journal
+
+- Every completed Self-Reflection (trigger, better choice, lesson learned, next-time plan) is automatically saved as a Journal entry with the current date and time.
+- In the Journal list, these entries show a small tag: "Reflection" so they are visually distinct from manual journal entries.
+- Tapping a reflection entry in the Journal shows all four answers in a clean read-only view.
+- Store everything locally like existing journal entries. No duplicates if the user saves the same reflection once.
+
+Keep all existing features, styles, colors, and navigation unchanged. Mobile-first. After building, run the build command so the dist output is updated.

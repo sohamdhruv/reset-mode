@@ -59,9 +59,12 @@ export default function Journal() {
     setShowForm(false);
   }
 
-  const commonMood = mostCommon(entries.map((e) => e.mood));
-  const commonTrigger = mostCommon(entries.map((e) => e.trigger).filter(Boolean));
-  const dangerTime = dangerHour(entries);
+  // Reflection entries share this list but should not skew the urge insights,
+  // so patterns are computed from manually logged urges only.
+  const manualEntries = entries.filter((e) => e.kind !== "reflection");
+  const commonMood = mostCommon(manualEntries.map((e) => e.mood));
+  const commonTrigger = mostCommon(manualEntries.map((e) => e.trigger).filter(Boolean));
+  const dangerTime = dangerHour(manualEntries);
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -69,7 +72,7 @@ export default function Journal() {
         <h2 className="text-xl font-black text-foreground mb-2">Trigger Journal</h2>
         <p className="text-muted-foreground text-sm mb-6">Understand your patterns to break them.</p>
 
-        {entries.length >= 3 && (
+        {manualEntries.length >= 3 && (
           <Card className="bg-card border border-border rounded-xl p-4 mb-5">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={14} className="text-primary" />
@@ -184,6 +187,7 @@ export default function Journal() {
             const date = new Date(entry.date);
             const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
             const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+            const isReflection = entry.kind === "reflection";
             return (
               <Card
                 key={entry.id}
@@ -192,19 +196,40 @@ export default function Journal() {
               >
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : entry.id)}
-                  className="w-full flex items-center justify-between p-4 text-left"
+                  className="w-full flex items-center justify-between gap-2 p-4 text-left"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm font-semibold text-foreground">{entry.mood}</div>
-                    <div className="text-xs text-muted-foreground">{dateStr} · {timeStr}</div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="text-sm font-semibold text-foreground truncate">
+                      {isReflection ? (entry.trigger || "Reflection") : entry.mood}
+                    </div>
+                    {isReflection && (
+                      <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">
+                        Reflection
+                      </span>
+                    )}
+                    <div className="text-xs text-muted-foreground shrink-0">{dateStr} · {timeStr}</div>
                   </div>
-                  {isExpanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                  {isExpanded ? <ChevronUp size={16} className="text-muted-foreground shrink-0" /> : <ChevronDown size={16} className="text-muted-foreground shrink-0" />}
                 </button>
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-border pt-3 space-y-2">
-                    {entry.trigger && <div className="text-sm"><span className="text-muted-foreground">Trigger: </span>{entry.trigger}</div>}
-                    {entry.appWanted && <div className="text-sm"><span className="text-muted-foreground">Called by: </span>{entry.appWanted}</div>}
-                    {entry.didInstead && <div className="text-sm"><span className="text-muted-foreground">Did instead: </span>{entry.didInstead}</div>}
+                    {isReflection ? (
+                      <>
+                        {entry.trigger && <div className="text-sm"><span className="text-muted-foreground">Trigger: </span>{entry.trigger}</div>}
+                        {entry.betterChoice && <div className="text-sm"><span className="text-muted-foreground">Better choice: </span>{entry.betterChoice}</div>}
+                        {entry.lesson && <div className="text-sm"><span className="text-muted-foreground">Learned: </span>{entry.lesson}</div>}
+                        {entry.nextAction && <div className="text-sm"><span className="text-muted-foreground">Next time: </span>{entry.nextAction}</div>}
+                        {!entry.betterChoice && !entry.lesson && !entry.nextAction && (
+                          <div className="text-sm text-muted-foreground">No extra notes added.</div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {entry.trigger && <div className="text-sm"><span className="text-muted-foreground">Trigger: </span>{entry.trigger}</div>}
+                        {entry.appWanted && <div className="text-sm"><span className="text-muted-foreground">Called by: </span>{entry.appWanted}</div>}
+                        {entry.didInstead && <div className="text-sm"><span className="text-muted-foreground">Did instead: </span>{entry.didInstead}</div>}
+                      </>
+                    )}
                   </div>
                 )}
               </Card>

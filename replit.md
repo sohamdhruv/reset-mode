@@ -26,7 +26,7 @@ Reset Mode is a mobile-first, dark-themed PWA that helps people break compulsive
 - `artifacts/reset-mode/src/lib/habitContent.ts` — additive per-habit content overrides (reminder/danger messages, streak-bucketed daily-reminder copy, journal copy). Habits without an entry return `null`/`undefined` and fall back to the existing generic copy, so it never changes behavior for habits it does not cover.
 - `artifacts/reset-mode/src/pages/` — one file per route (`Home`, `Urge`, `Simulation`, `Reflection`, `Story`, `Tracker`, `Spending`, `Journal`, `Plan`, `Settings`); routes wired in `src/App.tsx`.
 - `artifacts/reset-mode/src/lib/simulation.ts` — Simulation Mode content (scenarios, actions, reflections), the scripted-guidance fallback, and `fetchResetMasterGuidance` (robust `/api` client that falls back on any failure).
-- `artifacts/reset-mode/src/lib/stories.ts` — Storytelling Mode content: scripted Reset Master `STORY_CATEGORIES` (5 categories, 2–3 rotating variations each) and the `PROTECTIVE_CHOICES` shown after each story. Purely scripted; a per-category counter in `resetMode_storyRotation` rotates variations on repeat visits.
+- `artifacts/reset-mode/src/lib/stories.ts` — Storytelling Mode content: scripted Reset Master `STORY_CATEGORIES` (5 categories, 2–3 rotating variations each) and the `PROTECTIVE_CHOICES` shown after each story. Purely scripted; a per-category counter in `resetMode_storyRotation` rotates variations on repeat visits. Also exports `isLateNight()` and the pure `pickUrgeStory(seen, rotation, now)` used by the urge flow (prefers "The Late Night Test" late at night, otherwise no-repeat-until-all-seen category rotation via the `resetMode_urgeStorySeen` key; variation reuses the shared `resetMode_storyRotation`).
 - `artifacts/api-server/src/routes/resetMaster.ts` — `POST /api/reset-master/guidance` AI route (guided-only, validated, graceful errors); mounted in `src/routes/index.ts`.
 - `lib/api-spec/openapi.yaml` — the API contract (source for codegen; do not change `info.title`).
 
@@ -40,9 +40,9 @@ Reset Mode is a mobile-first, dark-themed PWA that helps people break compulsive
 
 ## Product
 
-- **Reset / "I have an urge"** — a guided breathing + reframe flow to ride out a craving.
+- **Reset / "I have an urge"** — a guided breathing + reframe flow to ride out a craving. After breathing (and the "Did the urge reduce?" check-in) it shows a context-picked Reset Story with protective choices ("Breathe again" + the existing quick actions + "Continue"), then the "urge defeated" celebration with a primary **Done** and an optional **Reflect on this moment (30 sec)** shortcut to `/reflect`.
 - **Simulation Mode ("Practice a Weak Moment")** — rehearse a hard moment while calm: pick a scenario → choose your response → get short "Reset Master" guidance → breathe → commit to a reflection; results saved to `resetMode_simulations`.
-- **Self-Reflection Mode ("Reflect on a Weak Moment")** — after a weak moment, name the trigger → the better choice made → what you learned → what you'll do next time; Reset Master affirmation shown, entry saved to `resetMode_reflections`.
+- **Self-Reflection Mode ("Reflect on a Weak Moment")** — after a weak moment, name the trigger → the better choice made → what you learned → what you'll do next time; Reset Master affirmation shown, entry saved to `resetMode_reflections` AND auto-archived into the Journal as a `kind:"reflection"` entry (deduped by `reflectionId`, tagged "Reflection", tappable to view all four answers read-only).
 - **Storytelling Mode ("Reset Story")** — short scripted Reset Master stories on discipline (5 themes, rotating variations), each ending with a "what protects your future right now?" choice that routes to breathing/goal/journal or a calm closing screen.
 - **Streaks / Tracker, Spending, Journal, Plan, Settings, reminders, onboarding** — supporting habit-reset tools.
 
