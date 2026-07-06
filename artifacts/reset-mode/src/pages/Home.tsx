@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Settings, Zap, CheckCircle, TrendingUp, Clock, DollarSign, Target, Dumbbell } from "lucide-react";
+import { Settings, Zap, CheckCircle, TrendingUp, Clock, DollarSign, Target, Dumbbell, Lightbulb, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useStreakInfo, useUrgesDefeated, useStartDate, useSpendings, useStorage, habitLabel } from "@/lib/storage";
@@ -134,6 +134,26 @@ export default function Home() {
         >
           <Dumbbell size={20} className="mr-2 text-primary" />
           Practice a Weak Moment
+        </Button>
+
+        <Button
+          data-testid="button-reflect"
+          variant="outline"
+          onClick={() => setLocation("/reflect")}
+          className="w-full h-14 rounded-xl border-border text-foreground font-semibold tracking-tight mb-3"
+        >
+          <Lightbulb size={20} className="mr-2 text-primary" />
+          Reflect on a Weak Moment
+        </Button>
+
+        <Button
+          data-testid="button-story"
+          variant="outline"
+          onClick={() => setLocation("/story")}
+          className="w-full h-14 rounded-xl border-border text-foreground font-semibold tracking-tight mb-3"
+        >
+          <BookOpen size={20} className="mr-2 text-primary" />
+          Reset Story
         </Button>
 
         {!isCleanToday ? (

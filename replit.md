@@ -22,10 +22,11 @@ Reset Mode is a mobile-first, dark-themed PWA that helps people break compulsive
 
 ## Where things live
 
-- `artifacts/reset-mode/src/lib/storage.ts` — all persisted state: typed `localStorage` hooks (`useStorage`, `useSettings`, `useSimulations`, streaks, spendings, journal) and the `resetMode_*` storage keys. Source of truth for user data shapes. `HabitType` + `HABIT_LABELS` define the selectable habits.
+- `artifacts/reset-mode/src/lib/storage.ts` — all persisted state: typed `localStorage` hooks (`useStorage`, `useSettings`, `useSimulations`, `useReflections`, streaks, spendings, journal) and the `resetMode_*` storage keys. Source of truth for user data shapes. `HabitType` + `HABIT_LABELS` define the selectable habits.
 - `artifacts/reset-mode/src/lib/habitContent.ts` — additive per-habit content overrides (reminder/danger messages, streak-bucketed daily-reminder copy, journal copy). Habits without an entry return `null`/`undefined` and fall back to the existing generic copy, so it never changes behavior for habits it does not cover.
-- `artifacts/reset-mode/src/pages/` — one file per route (`Home`, `Urge`, `Simulation`, `Tracker`, `Spending`, `Journal`, `Plan`, `Settings`); routes wired in `src/App.tsx`.
+- `artifacts/reset-mode/src/pages/` — one file per route (`Home`, `Urge`, `Simulation`, `Reflection`, `Story`, `Tracker`, `Spending`, `Journal`, `Plan`, `Settings`); routes wired in `src/App.tsx`.
 - `artifacts/reset-mode/src/lib/simulation.ts` — Simulation Mode content (scenarios, actions, reflections), the scripted-guidance fallback, and `fetchResetMasterGuidance` (robust `/api` client that falls back on any failure).
+- `artifacts/reset-mode/src/lib/stories.ts` — Storytelling Mode content: scripted Reset Master `STORY_CATEGORIES` (5 categories, 2–3 rotating variations each) and the `PROTECTIVE_CHOICES` shown after each story. Purely scripted; a per-category counter in `resetMode_storyRotation` rotates variations on repeat visits.
 - `artifacts/api-server/src/routes/resetMaster.ts` — `POST /api/reset-master/guidance` AI route (guided-only, validated, graceful errors); mounted in `src/routes/index.ts`.
 - `lib/api-spec/openapi.yaml` — the API contract (source for codegen; do not change `info.title`).
 
@@ -41,6 +42,8 @@ Reset Mode is a mobile-first, dark-themed PWA that helps people break compulsive
 
 - **Reset / "I have an urge"** — a guided breathing + reframe flow to ride out a craving.
 - **Simulation Mode ("Practice a Weak Moment")** — rehearse a hard moment while calm: pick a scenario → choose your response → get short "Reset Master" guidance → breathe → commit to a reflection; results saved to `resetMode_simulations`.
+- **Self-Reflection Mode ("Reflect on a Weak Moment")** — after a weak moment, name the trigger → the better choice made → what you learned → what you'll do next time; Reset Master affirmation shown, entry saved to `resetMode_reflections`.
+- **Storytelling Mode ("Reset Story")** — short scripted Reset Master stories on discipline (5 themes, rotating variations), each ending with a "what protects your future right now?" choice that routes to breathing/goal/journal or a calm closing screen.
 - **Streaks / Tracker, Spending, Journal, Plan, Settings, reminders, onboarding** — supporting habit-reset tools.
 
 ## User preferences

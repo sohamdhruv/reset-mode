@@ -56,6 +56,15 @@ export interface SimulationResult {
   usedAI: boolean;
 }
 
+export interface ReflectionEntry {
+  id: string;
+  date: string;
+  trigger: string;
+  betterChoice: string;
+  lesson: string;
+  nextAction: string;
+}
+
 export type GoalDistraction = "yes" | "sometimes" | "no" | "";
 
 export interface Settings {
@@ -214,6 +223,10 @@ export function useJournalEntries() {
 
 export function useSimulations() {
   return useStorage<SimulationResult[]>("resetMode_simulations", []);
+}
+
+export function useReflections() {
+  return useStorage<ReflectionEntry[]>("resetMode_reflections", []);
 }
 
 export function usePlanCompleted() {
